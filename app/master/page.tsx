@@ -41,19 +41,16 @@ const historySeed=[
 
 export default function Master(){
  const {lang,setLang}=useLanguage(); const tx=(k:keyof typeof copy)=>copy[k][lang]; const st=(s:string)=>statusMap[s]?.[lang]||s; const locale=lang==='kk'?'kk-KZ':lang==='en'?'en-US':'ru-RU'; const problemText=(v:string)=>{const key=v.toLowerCase();if(key.includes('отал')||key.includes('завод')||key.includes('start'))return lang==='kk'?'Көлік оталмай тұр':lang==='en'?"Won’t start":'Не заводится';if(key.includes('дөңгел')||key.includes('колес')||key.includes('tire'))return lang==='kk'?'Дөңгелек мәселесі':lang==='en'?'Tire problem':'Проблема с колесом';if(key.includes('эваку')||key.includes('tow'))return lang==='kk'?'Эвакуатор қажет':lang==='en'?'Tow truck needed':'Нужен эвакуатор';return v}
- const [tab,setTab]=useState<Tab>('home'),[online,setOnline]=useState(false),[order,setOrder]=useState<SharedOrder|null>(null),[toast,setToast]=useState(''),[earnings,setEarnings]=useState(38500),[completed,setCompleted]=useState(4),[countdown,setCountdown]=useState(20),[history,setHistory]=useState(historySeed)
+ const [tab,setTab]=useState<Tab>('home'),[online,setOnline]=useState(false),[order,setOrder]=useState<SharedOrder|null>(null),[dismissedOrderId,setDismissedOrderId]=useState(''),[toast,setToast]=useState(''),[earnings,setEarnings]=useState(38500),[completed,setCompleted]=useState(4),[countdown,setCountdown]=useState(20),[history,setHistory]=useState(historySeed)
  const notify=(v:string)=>{setToast(v);window.setTimeout(()=>setToast(''),2200)}
- useEffect(()=>{if(!online)return;const load=async()=>{try{const r=await fetch('/api/orders',{cache:'no-store'});const d=await r.json();setOrder(d.order||null)}catch{}};void load();const timer=window.setInterval(load,1000);return()=>window.clearInterval(timer)},[online])
+ useEffect(()=>{if(!online)return;const load=async()=>{try{const r=await fetch('/api/orders',{cache:'no-store'});const d=await r.json();const nextOrder=d.order||null;if(nextOrder?.id===dismissedOrderId&&nextOrder.status==='Завершён'){setOrder(null);return}setOrder(nextOrder)}catch{}};void load();const timer=window.setInterval(load,1000);return()=>window.clearInterval(timer)},[online,dismissedOrderId])
  useEffect(()=>{if(!order||order.status!=='Новый заказ')return;setCountdown(20);const timer=window.setInterval(()=>setCountdown(v=>v>0?v-1:0),1000);return()=>window.clearInterval(timer)},[order?.id,order?.status])
  const current=order?flow.indexOf(order.status):-1;const next=useMemo(()=>flow[Math.min(current+1,flow.length-1)]||flow[0],[current])
  async function patch(data:Record<string,unknown>){const r=await fetch('/api/orders',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const d=await r.json();setOrder(d.order);return d.order as SharedOrder}
  async function accept(){await patch({status:'Мастер принял заказ',master:'Айбек Нурланов'});notify(st('Мастер принял заказ'))}
  async function reject(){await fetch('/api/orders',{method:'DELETE'});setOrder(null);notify(tx('decline'))}
  async function advance(){const updated=await patch({status:next});notify(st(updated.status));if(updated.status==='Завершён'){setEarnings(v=>v+updated.price);setCompleted(v=>v+1);setHistory(v=>[{id:updated.id,car:updated.vehicle,service:{ru:updated.problem,kk:updated.problem,en:updated.problem},price:updated.price,time:new Date().toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})},...v])}}
- function clearFinished() {
-  setOrder(null)
-  setTab('home')
-}
+ function clearFinished(){if(order)setDismissedOrderId(order.id);setOrder(null);setTab('home')}
 
  return <main className="master-shell"><section className="master-phone pro-master">
   <header className="master-header"><div className="master-header-left"><Link href="/" className="role-back" aria-label={tx('roleBack')}>←</Link><div className="master-brand"><img src="/joldos-logo.png" alt="JolDos"/><div><b>JolDos Master</b><small>{tx('cabinet')}</small></div></div></div><div className="master-header-tools"><LanguageSwitcher lang={lang} onChange={setLang} compact/><span className={online?'master-online':'master-offline'}>{online?tx('online'):tx('offline')}</span></div></header>
