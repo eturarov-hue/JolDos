@@ -50,7 +50,10 @@ export default function Master(){
  async function accept(){await patch({status:'Мастер принял заказ',master:'Айбек Нурланов'});notify(st('Мастер принял заказ'))}
  async function reject(){await fetch('/api/orders',{method:'DELETE'});setOrder(null);notify(tx('decline'))}
  async function advance(){const updated=await patch({status:next});notify(st(updated.status));if(updated.status==='Завершён'){setEarnings(v=>v+updated.price);setCompleted(v=>v+1);setHistory(v=>[{id:updated.id,car:updated.vehicle,service:{ru:updated.problem,kk:updated.problem,en:updated.problem},price:updated.price,time:new Date().toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})},...v])}}
- async function clearFinished(){await fetch('/api/orders',{method:'DELETE'});setOrder(null);setTab('home')}
+ function clearFinished() {
+  setOrder(null)
+  setTab('home')
+}
 
  return <main className="master-shell"><section className="master-phone pro-master">
   <header className="master-header"><div className="master-header-left"><Link href="/" className="role-back" aria-label={tx('roleBack')}>←</Link><div className="master-brand"><img src="/joldos-logo.png" alt="JolDos"/><div><b>JolDos Master</b><small>{tx('cabinet')}</small></div></div></div><div className="master-header-tools"><LanguageSwitcher lang={lang} onChange={setLang} compact/><span className={online?'master-online':'master-offline'}>{online?tx('online'):tx('offline')}</span></div></header>
