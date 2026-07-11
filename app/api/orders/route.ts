@@ -44,7 +44,22 @@ export async function PATCH(request: Request){
   return NextResponse.json({ order: globalThis.joldosOrder })
 }
 
-export async function DELETE(){
-  globalThis.joldosOrder = null
-  return NextResponse.json({ ok: true })
+export async function DELETE() {
+  const current = readOrder()
+
+  if (!current) {
+    return NextResponse.json(
+      { error: 'Заказ не найден' },
+      { status: 404 }
+    )
+  }
+
+  globalThis.joldosOrder = {
+    ...current,
+    status: 'Отменён'
+  }
+
+  return NextResponse.json({
+    order: globalThis.joldosOrder
+  })
 }
