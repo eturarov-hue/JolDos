@@ -34,22 +34,19 @@ const statusMap:Record<string,Record<Lang,string>>={
  'Завершён':{kk:'Аяқталды',ru:'Завершён',en:'Completed'}
 }
 const flow=['Мастер принял заказ','Мастер едет','Мастер прибыл','Работа выполняется','Завершён']
-const historySeed=[
- {id:'h1',car:'Toyota Camry',service:{ru:'Запуск аккумулятора',kk:'Аккумуляторды іске қосу',en:'Battery jump-start'},price:7000,time:'10:40'},
- {id:'h2',car:'Kia Sportage',service:{ru:'Замена колеса',kk:'Дөңгелек ауыстыру',en:'Tire replacement'},price:6500,time:'08:15'}
-]
+const historySeed: {id:string;car:string;service:Record<Lang,string>;price:number;time:string}[]=[]
 
 export default function Master(){
  const {lang,setLang}=useLanguage(); const tx=(k:keyof typeof copy)=>copy[k][lang]; const st=(s:string)=>statusMap[s]?.[lang]||s; const locale=lang==='kk'?'kk-KZ':lang==='en'?'en-US':'ru-RU'; const problemText=(v:string)=>{const key=v.toLowerCase();if(key.includes('отал')||key.includes('завод')||key.includes('start'))return lang==='kk'?'Көлік оталмай тұр':lang==='en'?"Won’t start":'Не заводится';if(key.includes('дөңгел')||key.includes('колес')||key.includes('tire'))return lang==='kk'?'Дөңгелек мәселесі':lang==='en'?'Tire problem':'Проблема с колесом';if(key.includes('эваку')||key.includes('tow'))return lang==='kk'?'Эвакуатор қажет':lang==='en'?'Tow truck needed':'Нужен эвакуатор';return v}
  const [tab,setTab]=useState<Tab>('home'),[online,setOnline]=useState(false),[order,setOrder]=useState<SharedOrder|null>(null),[dismissedOrderId,setDismissedOrderId]=useState(''),[toast,setToast]=useState(''),[earnings,setEarnings]=useState(38500),[completed,setCompleted]=useState(4),[countdown,setCountdown]=useState(20),[history,setHistory]=useState(historySeed)
  const notify=(v:string)=>{setToast(v);window.setTimeout(()=>setToast(''),2200)}
- useEffect(()=>{if(!online)return;const load=async()=>{try{const r=await fetch('/api/orders',{cache:'no-store'});const d=await r.json();const nextOrder=d.order||null;if(nextOrder?.id===dismissedOrderId&&nextOrder.status==='Завершён'){setOrder(null);return}setOrder(nextOrder)}catch{}};void load();const timer=window.setInterval(load,1000);return()=>window.clearInterval(timer)},[online,dismissedOrderId])
+ useEffect(()=>{const load=async()=>{try{const r=await fetch(`/api/orders?master=${encodeURIComponent('Айбек Нурланов')}`,{cache:'no-store'});const d=await r.json();const all:Array<SharedOrder>=Array.isArray(d.orders)?d.orders:[];const finished=all.filter(item=>item.status==='Завершён');setHistory(finished.map(item=>({id:item.id,car:item.vehicle,service:{ru:item.problem,kk:item.problem,en:item.problem},price:item.price,time:new Date(item.createdAt).toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})})));setCompleted(finished.length);setEarnings(finished.reduce((sum,item)=>sum+item.price,0));if(!online){setOrder(null);return}const nextOrder=d.order||null;if(nextOrder?.id===dismissedOrderId&&nextOrder.status==='Завершён'){setOrder(null);return}setOrder(nextOrder)}catch{}};void load();const timer=window.setInterval(load,1000);return()=>window.clearInterval(timer)},[online,dismissedOrderId,locale])
  useEffect(()=>{if(!order||order.status!=='Новый заказ')return;setCountdown(20);const timer=window.setInterval(()=>setCountdown(v=>v>0?v-1:0),1000);return()=>window.clearInterval(timer)},[order?.id,order?.status])
  const current=order?flow.indexOf(order.status):-1;const next=useMemo(()=>flow[Math.min(current+1,flow.length-1)]||flow[0],[current])
- async function patch(data:Record<string,unknown>){const r=await fetch('/api/orders',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const d=await r.json();setOrder(d.order);return d.order as SharedOrder}
+ async function patch(data:Record<string,unknown>){if(!order)throw new Error('Заказ не выбран');const r=await fetch('/api/orders',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:order.id,...data})});const d=await r.json();if(!r.ok||!d.order)throw new Error(d.error||'Не удалось обновить заказ');setOrder(d.order);return d.order as SharedOrder}
  async function accept(){await patch({status:'Мастер принял заказ',master:'Айбек Нурланов'});notify(st('Мастер принял заказ'))}
- async function reject(){await fetch('/api/orders',{method:'DELETE'});setOrder(null);notify(tx('decline'))}
- async function advance(){const updated=await patch({status:next});notify(st(updated.status));if(updated.status==='Завершён'){setEarnings(v=>v+updated.price);setCompleted(v=>v+1);setHistory(v=>[{id:updated.id,car:updated.vehicle,service:{ru:updated.problem,kk:updated.problem,en:updated.problem},price:updated.price,time:new Date().toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'})},...v])}}
+ async function reject(){if(!order)return;await fetch(`/api/orders?id=${encodeURIComponent(order.id)}`,{method:'DELETE'});setOrder(null);notify(tx('decline'))}
+ async function advance(){const updated=await patch({status:next});notify(st(updated.status))}
  function clearFinished(){if(order)setDismissedOrderId(order.id);setOrder(null);setTab('home')}
 
  return <main className="master-shell"><section className="master-phone pro-master">
