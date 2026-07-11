@@ -55,10 +55,35 @@ export default function Home(){
   useEffect(()=>{ try{ localStorage.setItem('joldos-orders',JSON.stringify(orders)) }catch{} },[orders])
 
   useEffect(()=>{
+    const loadHistory=async()=>{
+      try{
+        const response=await fetch(`/api/orders?client=${encodeURIComponent('Ержан Т.')}`,{cache:'no-store'})
+        const data=await response.json()
+        if(!Array.isArray(data.orders)) return
+        const apiOrders:Order[]=data.orders.map((item:any)=>({
+          id:item.id,
+          master:item.master||tx('searchingMaster'),
+          problem:item.problem,
+          location:item.location,
+          createdAt:new Date(item.createdAt).toLocaleString(locale),
+          status:item.status
+        }))
+        setOrders(apiOrders)
+        const active=apiOrders.find(item=>item.status!=='Завершён'&&item.status!=='Отменён')
+        if(active){
+          setActiveOrderId(active.id)
+          setStage('active')
+        }
+      }catch{}
+    }
+    void loadHistory()
+  },[])
+
+  useEffect(()=>{
     if(!activeOrderId) return
     const timer=window.setInterval(async()=>{
       try{
-        const response=await fetch('/api/orders',{cache:'no-store'})
+        const response=await fetch(`/api/orders?id=${encodeURIComponent(activeOrderId)}`,{cache:'no-store'})
         const data=await response.json()
         if(!data.order || data.order.id!==activeOrderId) return
         setOrders(prev=>prev.map(o=>o.id===activeOrderId?{...o,master:data.order.master||o.master,status:data.order.status}:o))
@@ -103,7 +128,8 @@ export default function Home(){
     try{
       const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problem:problem?.title||tx('helpRoad'),location:locationText,client:'Ержан Т.',vehicle:'Toyota Prado 120',price:7000})})
       const data=await response.json()
-      const order:Order={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date().toLocaleString(locale),status:'Ищем мастера'}
+      if(!response.ok||!data.order) throw new Error(data.error||'Create order failed')
+      const order:Order={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date(data.order.createdAt).toLocaleString(locale),status:data.order.status}
       setOrders(prev=>[order,...prev]); setActiveOrderId(order.id); setStage('active'); notify(tx('requestSent'))
     }catch{ notify(tx('requestFailed')) }
   }
