@@ -69,10 +69,8 @@ export default function Home(){
           status:item.status
         }))
         setOrders(apiOrders)
-       const active = apiOrders.find(
-  item =>
-    String(item.status) !== 'Завершён' &&
-    String(item.status) !== 'Отменён'
+const active = apiOrders.find(
+  (item: any) => !['Завершён', 'Отменён'].includes(item.status)
 )
         if(active){
           setActiveOrderId(active.id)
