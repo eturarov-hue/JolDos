@@ -59,7 +59,9 @@ function toShared(row: DbOrder): SharedOrder {
 
 async function readJson(response: Response) {
   const text = await response.text()
+
   if (!text) return null
+
   try {
     return JSON.parse(text)
   } catch {
@@ -83,7 +85,6 @@ export async function GET(request: NextRequest) {
   if (client) params.set('client', `eq.${client}`)
   if (master) params.set('master', `eq.${master}`)
   if (status) params.set('status', `eq.${status}`)
-
   if (id) params.set('limit', '1')
 
   const response = await fetch(
@@ -106,14 +107,21 @@ export async function GET(request: NextRequest) {
   const rows = (Array.isArray(data) ? data : []) as DbOrder[]
   const orders = rows.map(toShared)
 
-  // Для старого интерфейса мастера возвращаем один актуальный заказ.
   const order =
-    orders.find(item => !['Завершён', 'Отменён'].includes(item.status)) ||
-    null
+    orders.find(
+      item => !['Завершён', 'Отменён'].includes(item.status)
+    ) || null
 
   return NextResponse.json(
-    { order: id ? orders[0] || null : order, orders },
-    { headers: { 'Cache-Control': 'no-store' } }
+    {
+      order: id ? orders[0] || null : order,
+      orders,
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    }
   )
 }
 
@@ -121,6 +129,7 @@ export async function POST(request: NextRequest) {
   if (!supabaseUrl || !serviceKey) return configError()
 
   const body = await request.json()
+
   const row = {
     id: String(Date.now()),
     problem: String(body.problem || 'Помощь на дороге'),
@@ -132,11 +141,16 @@ export async function POST(request: NextRequest) {
     master: null,
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/orders`, {
-    method: 'POST',
-    headers: headers({ Prefer: 'return=representation' }),
-    body: JSON.stringify(row),
-  })
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/orders`,
+    {
+      method: 'POST',
+      headers: headers({
+        Prefer: 'return=representation',
+      }),
+      body: JSON.stringify(row),
+    }
+  )
 
   const data = await readJson(response)
 
@@ -147,8 +161,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const created = (Array.isArray(data) ? data[0] : data) as DbOrder
-  return NextResponse.json({ order: toShared(created) }, { status: 201 })
+  const created = (
+    Array.isArray(data) ? data[0] : data
+  ) as DbOrder
+
+  return NextResponse.json(
+    { order: toShared(created) },
+    { status: 201 }
+  )
 }
 
 export async function PATCH(request: NextRequest) {
@@ -160,36 +180,77 @@ export async function PATCH(request: NextRequest) {
   if (!id) {
     const currentResponse = await fetch(
       `${supabaseUrl}/rest/v1/orders?select=id&status=not.in.(Завершён,Отменён)&order=created_at.desc&limit=1`,
-      { headers: headers(), cache: 'no-store' }
+      {
+        headers: headers(),
+        cache: 'no-store',
+      }
     )
+
     const currentData = await readJson(currentResponse)
+
     if (!currentResponse.ok) {
       return NextResponse.json(
-        { error: 'Не удалось найти заказ', details: currentData },
+        {
+          error: 'Не удалось найти заказ',
+          details: currentData,
+        },
         { status: currentResponse.status }
       )
     }
-    id = String(Array.isArray(currentData) ? currentData[0]?.id || '' : '')
+
+    id = String(
+      Array.isArray(currentData)
+        ? currentData[0]?.id || ''
+        : ''
+    )
   }
 
   if (!id) {
-    return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'Заказ не найден' },
+      { status: 404 }
+    )
   }
 
   const patch: Record<string, unknown> = {}
-  if (body.status !== undefined) patch.status = String(body.status)
-  if (body.master !== undefined) patch.master = body.master ? String(body.master) : null
-  if (body.problem !== undefined) patch.problem = String(body.problem)
-  if (body.location !== undefined) patch.location = String(body.location)
-  if (body.client !== undefined) patch.client = String(body.client)
-  if (body.vehicle !== undefined) patch.vehicle = String(body.vehicle)
-  if (body.price !== undefined) patch.price = Number(body.price)
+
+  if (body.status !== undefined) {
+    patch.status = String(body.status)
+  }
+
+  if (body.master !== undefined) {
+    patch.master = body.master
+      ? String(body.master)
+      : null
+  }
+
+  if (body.problem !== undefined) {
+    patch.problem = String(body.problem)
+  }
+
+  if (body.location !== undefined) {
+    patch.location = String(body.location)
+  }
+
+  if (body.client !== undefined) {
+    patch.client = String(body.client)
+  }
+
+  if (body.vehicle !== undefined) {
+    patch.vehicle = String(body.vehicle)
+  }
+
+  if (body.price !== undefined) {
+    patch.price = Number(body.price)
+  }
 
   const response = await fetch(
     `${supabaseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
-      headers: headers({ Prefer: 'return=representation' }),
+      headers: headers({
+        Prefer: 'return=representation',
+      }),
       body: JSON.stringify(patch),
     }
   )
@@ -198,44 +259,76 @@ export async function PATCH(request: NextRequest) {
 
   if (!response.ok) {
     return NextResponse.json(
-      { error: 'Не удалось обновить заказ', details: data },
+      {
+        error: 'Не удалось обновить заказ',
+        details: data,
+      },
       { status: response.status }
     )
   }
 
-  const updated = (Array.isArray(data) ? data[0] : data) as DbOrder | undefined
+  const updated = (
+    Array.isArray(data) ? data[0] : data
+  ) as DbOrder | undefined
+
   if (!updated) {
-    return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'Заказ не найден' },
+      { status: 404 }
+    )
   }
 
-  return NextResponse.json({ order: toShared(updated) })
+  return NextResponse.json({
+    order: toShared(updated),
+  })
 }
 
 export async function DELETE(request: NextRequest) {
   if (!supabaseUrl || !serviceKey) return configError()
 
   const body = await request.json().catch(() => ({}))
-  let id = String(body.id || request.nextUrl.searchParams.get('id') || '')
+
+  let id = String(
+    body.id ||
+      request.nextUrl.searchParams.get('id') ||
+      ''
+  )
 
   if (!id) {
     const currentResponse = await fetch(
       `${supabaseUrl}/rest/v1/orders?select=id&status=not.in.(Завершён,Отменён)&order=created_at.desc&limit=1`,
-      { headers: headers(), cache: 'no-store' }
+      {
+        headers: headers(),
+        cache: 'no-store',
+      }
     )
+
     const currentData = await readJson(currentResponse)
-    id = String(Array.isArray(currentData) ? currentData[0]?.id || '' : '')
+
+    id = String(
+      Array.isArray(currentData)
+        ? currentData[0]?.id || ''
+        : ''
+    )
   }
 
   if (!id) {
-    return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'Заказ не найден' },
+      { status: 404 }
+    )
   }
 
   const response = await fetch(
     `${supabaseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
-      headers: headers({ Prefer: 'return=representation' }),
-      body: JSON.stringify({ status: 'Отменён' }),
+      headers: headers({
+        Prefer: 'return=representation',
+      }),
+      body: JSON.stringify({
+        status: 'Отменён',
+      }),
     }
   )
 
@@ -243,11 +336,19 @@ export async function DELETE(request: NextRequest) {
 
   if (!response.ok) {
     return NextResponse.json(
-      { error: 'Не удалось отменить заказ', details: data },
+      {
+        error: 'Не удалось отменить заказ',
+        details: data,
+      },
       { status: response.status }
     )
   }
 
-  const updated = (Array.isArray(data) ? data[0] : data) as DbOrder | undefined
-  return NextResponse.json({ order: updated ? toShared(updated) : null })
+  const updated = (
+    Array.isArray(data) ? data[0] : data
+  ) as DbOrder | undefined
+
+  return NextResponse.json({
+    order: updated ? toShared(updated) : null,
+  })
 }
