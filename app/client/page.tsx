@@ -7,32 +7,16 @@ import { ChatSheet } from '@/components/ChatSheet'
 import { MapView } from '@/components/MapView'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/lib/i18n'
-import { getMasters, getProblems, getStations, statusSteps, statusText } from '@/lib/mock-data'
+import { getMasters, getStations, statusSteps, statusText } from '@/lib/mock-data'
+import {
+  SERVICE_LIST,
+  getService,
+  type ServiceDefinition,
+  type ServiceProviderType,
+} from '@/lib/services'
+import { TEST_MASTER_LIST } from '@/lib/test-masters'
 import type { Order, Stage, Tab } from '@/types'
 
-type ServiceType = 'road_assistance' | 'tow_truck' | 'battery' | 'tire_service' | 'fuel_delivery' | 'car_unlock' | 'car_wash' | 'service_station'
-type ProviderType = 'master' | 'tow_truck' | 'electrician' | 'tire_service' | 'fuel_delivery' | 'locksmith' | 'car_wash' | 'service_station'
-type ClientOrder = Order & { serviceType?: ServiceType; providerType?: ProviderType }
-type ServiceRoute = { problemId: string; serviceType: ServiceType; providerType: ProviderType }
-
-const serviceRoutes: Record<string, ServiceRoute> = {
-  tow: { problemId: 'tow', serviceType: 'tow_truck', providerType: 'tow_truck' },
-  battery: { problemId: 'start', serviceType: 'battery', providerType: 'electrician' },
-  wheel: { problemId: 'wheel', serviceType: 'tire_service', providerType: 'tire_service' },
-  fuel: { problemId: 'fuel', serviceType: 'fuel_delivery', providerType: 'fuel_delivery' },
-  unlock: { problemId: 'other', serviceType: 'car_unlock', providerType: 'locksmith' },
-  repair: { problemId: 'other', serviceType: 'road_assistance', providerType: 'master' },
-  wash: { problemId: 'other', serviceType: 'car_wash', providerType: 'car_wash' },
-  station: { problemId: 'other', serviceType: 'service_station', providerType: 'service_station' },
-}
-
-function routeForProblem(problemId: string): ServiceRoute {
-  if (problemId === 'tow') return serviceRoutes.tow
-  if (problemId === 'start') return serviceRoutes.battery
-  if (problemId === 'wheel') return serviceRoutes.wheel
-  if (problemId === 'fuel') return serviceRoutes.fuel
-  return serviceRoutes.repair
-}
 
 const ACTIVE_ORDER_STATUSES = new Set([
   'Новый заказ',
@@ -54,16 +38,15 @@ export default function Home(){
     subtitle:{ru:'Выберите проблему — найдём проверенного мастера рядом.',kk:'Мәселені таңдаңыз — жақын жерден тексерілген шебер табамыз.',en:'Choose the problem — we will find a trusted specialist nearby.'},
     choose:{ru:'Выберите проблему',kk:'Мәселені таңдаңыз',en:'Choose a problem'}, required:{ru:'Обязательно',kk:'Міндетті',en:'Required'}, selected:{ru:'Выбрано',kk:'Таңдалды',en:'Selected'},
     location:{ru:'Ваше местоположение',kk:'Сіздің орналасқан жеріңіз',en:'Your location'}, find:{ru:'Найти ближайшую помощь',kk:'Жақын көмекті табу',en:'Find nearby help'}, searching:{ru:'Ищем ближайшего мастера',kk:'Жақын шеберді іздеп жатырмыз',en:'Searching for a nearby specialist'}, cancel:{ru:'Отменить поиск',kk:'Іздеуді тоқтату',en:'Cancel search'},
-    nearest:{ru:'Ближайший мастер',kk:'Ең жақын шебер',en:'Nearest specialist'}, threeReady:{ru:'3 мастера рядом',kk:'Жақын жерде 3 шебер бар',en:'3 specialists nearby'}, threeReadyDesc:{ru:'После вызова заказ одновременно получат Айбек, Нурлан и Санжар',kk:'Шақырғаннан кейін тапсырысты Айбек, Нұрлан және Санжар бір уақытта алады',en:'After requesting help, Aibek, Nurlan and Sanzhar will receive the order at the same time'}, call:{ru:'Отправить заказ 3 мастерам',kk:'Тапсырысты 3 шеберге жіберу',en:'Send order to 3 specialists'}, current:{ru:'Текущий заказ',kk:'Ағымдағы тапсырыс',en:'Current order'},
+    nearest:{ru:'Ближайший мастер',kk:'Ең жақын шебер',en:'Nearest specialist'}, suitableNearby:{ru:'Подходящие мастера рядом',kk:'Жақын жердегі қолайлы шеберлер',en:'Suitable specialists nearby'}, suitableDesc:{ru:'Заказ получат ближайшие онлайн-мастера нужной специализации',kk:'Тапсырысты қажетті мамандығы бар жақын онлайн-шеберлер алады',en:'The nearest online specialists with the required skill will receive the order'}, call:{ru:'Отправить заявку',kk:'Өтінім жіберу',en:'Send request'}, current:{ru:'Текущий заказ',kk:'Ағымдағы тапсырыс',en:'Current order'},
     home:{ru:'Главная',kk:'Басты бет',en:'Home'}, map:{ru:'Карта',kk:'Карта',en:'Map'}, sto:{ru:'СТО',kk:'Автосервис',en:'Services'}, orders:{ru:'Заказы',kk:'Тапсырыстар',en:'Orders'}, profile:{ru:'Профиль',kk:'Профиль',en:'Profile'}, roleBack:{ru:'Сменить роль',kk:'Рөлді ауыстыру',en:'Change role'},
     availability:{ru:'Помощь доступна 24/7',kk:'Көмек тәулік бойы қолжетімді',en:'Help is available 24/7'}, emergency:{ru:'Экстренная помощь',kk:'Шұғыл көмек',en:'Emergency assistance'}, call112:{ru:'Позвонить 112',kk:'112 нөміріне қоңырау шалу',en:'Call 112'}, step1:{ru:'Шаг 1',kk:'1-қадам',en:'Step 1'},
     ratingWord:{ru:'рейтинг',kk:'рейтинг',en:'rating'}, arrival:{ru:'прибытие',kk:'келу уақыты',en:'arrival'}, verified:{ru:'проверены',kk:'тексерілген',en:'verified'}, firstChoose:{ru:'Сначала выберите проблему',kk:'Алдымен мәселені таңдаңыз',en:'Choose a problem first'}, geoUnsupported:{ru:'Геолокация не поддерживается',kk:'Геолокацияға қолдау көрсетілмейді',en:'Geolocation is not supported'}, geoHttps:{ru:'На телефоне геолокация работает только через HTTPS',kk:'Телефонда геолокация тек HTTPS арқылы жұмыс істейді',en:'On mobile, geolocation requires HTTPS'}, geoFound:{ru:'Местоположение определено',kk:'Орналасқан жер анықталды',en:'Location detected'}, geoAllow:{ru:'Разрешите доступ к геолокации',kk:'Геолокацияға рұқсат беріңіз',en:'Allow location access'},
-    helpRoad:{ru:'Помощь на дороге',kk:'Жолдағы көмек',en:'Roadside assistance'}, searchingMaster:{ru:'Ищем мастера',kk:'Шебер ізделуде',en:'Searching for a specialist'}, requestSent:{ru:'Заявка отправлена мастерам',kk:'Өтінім шеберлерге жіберілді',en:'Request sent to specialists'}, requestFailed:{ru:'Не удалось отправить заявку',kk:'Өтінімді жіберу мүмкін болмады',en:'Could not send request'}, sentToThree:{ru:'Заказ отправлен 3 мастерам',kk:'Тапсырыс 3 шеберге жіберілді',en:'Order sent to 3 specialists'}, waitingAcceptance:{ru:'Ожидаем, кто первым примет заказ',kk:'Тапсырысты кім бірінші қабылдайтынын күтеміз',en:'Waiting for the first specialist to accept'}, assignedMaster:{ru:'Назначенный мастер',kk:'Тағайындалған шебер',en:'Assigned specialist'}, cancelOrder:{ru:'Отменить заказ',kk:'Тапсырысты болдырмау',en:'Cancel order'}, cancelConfirm:{ru:'Отменить текущий заказ?',kk:'Ағымдағы тапсырысты болдырмау керек пе?',en:'Cancel the current order?'}, cancelSuccess:{ru:'Заказ отменён',kk:'Тапсырыс болдырылмады',en:'Order cancelled'}, cancelFailed:{ru:'Не удалось отменить заказ',kk:'Тапсырысты болдырмау мүмкін болмады',en:'Could not cancel the order'}, workDoneRate:{ru:'Работа завершена — оцените мастера',kk:'Жұмыс аяқталды — шеберді бағалаңыз',en:'Work completed — rate the specialist'}, rateRequired:{ru:'Поставьте оценку мастеру',kk:'Шеберге баға беріңіз',en:'Rate the specialist'}, thanksRating:{ru:'Спасибо за оценку!',kk:'Бағаңызға рақмет!',en:'Thank you for your rating!'}, messageSent:{ru:'Сообщение отправлено',kk:'Хабарлама жіберілді',en:'Message sent'},
+    helpRoad:{ru:'Помощь на дороге',kk:'Жолдағы көмек',en:'Roadside assistance'}, searchingMaster:{ru:'Ищем мастера',kk:'Шебер ізделуде',en:'Searching for a specialist'}, requestSent:{ru:'Заявка отправлена мастерам',kk:'Өтінім шеберлерге жіберілді',en:'Request sent to specialists'}, requestFailed:{ru:'Не удалось отправить заявку',kk:'Өтінімді жіберу мүмкін болмады',en:'Could not send request'}, sentToSuitable:{ru:'Заказ отправлен подходящим мастерам',kk:'Тапсырыс қолайлы шеберлерге жіберілді',en:'Order sent to suitable specialists'}, waitingAcceptance:{ru:'Ожидаем, кто первым примет заказ',kk:'Тапсырысты кім бірінші қабылдайтынын күтеміз',en:'Waiting for the first specialist to accept'}, assignedMaster:{ru:'Назначенный мастер',kk:'Тағайындалған шебер',en:'Assigned specialist'}, cancelOrder:{ru:'Отменить заказ',kk:'Тапсырысты болдырмау',en:'Cancel order'}, cancelConfirm:{ru:'Отменить текущий заказ?',kk:'Ағымдағы тапсырысты болдырмау керек пе?',en:'Cancel the current order?'}, cancelSuccess:{ru:'Заказ отменён',kk:'Тапсырыс болдырылмады',en:'Order cancelled'}, cancelFailed:{ru:'Не удалось отменить заказ',kk:'Тапсырысты болдырмау мүмкін болмады',en:'Could not cancel the order'}, workDoneRate:{ru:'Работа завершена — оцените мастера',kk:'Жұмыс аяқталды — шеберді бағалаңыз',en:'Work completed — rate the specialist'}, rateRequired:{ru:'Поставьте оценку мастеру',kk:'Шеберге баға беріңіз',en:'Rate the specialist'}, thanksRating:{ru:'Спасибо за оценку!',kk:'Бағаңызға рақмет!',en:'Thank you for your rating!'}, messageSent:{ru:'Сообщение отправлено',kk:'Хабарлама жіберілді',en:'Message sent'},
     findPrefix:{ru:'Найти помощь',kk:'Көмек табу',en:'Find help'}, reviews:{ru:'отзывов',kk:'пікір',en:'reviews'}, toYou:{ru:'до вас',kk:'сізге дейін',en:'to you'}, distanceWord:{ru:'расстояние',kk:'қашықтық',en:'distance'}, yourProblem:{ru:'Ваша проблема',kk:'Сіздің мәселеңіз',en:'Your problem'}, calloutCost:{ru:'Стоимость выезда',kk:'Шақыру құны',en:'Call-out price'}, expectedArrival:{ru:'Ожидаемое прибытие',kk:'Күтілетін келу уақыты',en:'Expected arrival'}, onSite:{ru:'Мастер на месте',kk:'Шебер орнында',en:'Specialist is on site'}, waitUpdate:{ru:'Ожидать обновление от мастера',kk:'Шебердің жаңартуын күту',en:'Wait for specialist update'}, statusByMaster:{ru:'Статус меняет мастер в JolDos Master',kk:'Мәртебені JolDos Master қолданбасындағы шебер өзгертеді',en:'The specialist updates the status in JolDos Master'}, howWas:{ru:'Как всё прошло?',kk:'Қызмет қалай өтті?',en:'How did it go?'}, rateWork:{ru:'Оцените работу мастера',kk:'Шебердің жұмысын бағалаңыз',en:'Rate the specialist’s work'}, finishHome:{ru:'Завершить и вернуться на главную',kk:'Аяқтап, басты бетке оралу',en:'Finish and return home'},
     mapHelp:{ru:'Карта помощи',kk:'Көмек картасы',en:'Assistance map'}, chooseNearest:{ru:'Выберите ближайшего мастера',kk:'Ең жақын шеберді таңдаңыз',en:'Choose the nearest specialist'}, catalog:{ru:'Каталог СТО',kk:'Автосервистер каталогы',en:'Service center directory'}, trustedAstana:{ru:'Проверенные сервисы Астаны',kk:'Астанадағы тексерілген автосервистер',en:'Verified service centers in Astana'}, cardOpened:{ru:'Карточка открыта',kk:'Карточка ашылды',en:'Card opened'}, myOrders:{ru:'Мои заказы',kk:'Менің тапсырыстарым',en:'My orders'}, historyCurrent:{ru:'История и текущие заявки',kk:'Тарих және ағымдағы өтінімдер',en:'History and active requests'}, noOrders:{ru:'Заказов пока нет',kk:'Әзірге тапсырыс жоқ',en:'No orders yet'}, noOrdersDesc:{ru:'Выберите проблему на главной и вызовите мастера.',kk:'Басты беттен мәселені таңдап, шебер шақырыңыз.',en:'Choose a problem on the home screen and request a specialist.'}, openOrder:{ru:'Открыть заказ',kk:'Тапсырысты ашу',en:'Open order'}, settingsTitle:{ru:'Настройки JolDos',kk:'JolDos баптаулары',en:'JolDos settings'}, userName:{ru:'Пользователь JolDos',kk:'JolDos пайдаланушысы',en:'JolDos user'}, supportCall:{ru:'Позвонить в поддержку',kk:'Қолдау қызметіне қоңырау шалу',en:'Call support'}, cars:{ru:'Мои автомобили',kk:'Менің көліктерім',en:'My vehicles'}, payment:{ru:'Способы оплаты',kk:'Төлем тәсілдері',en:'Payment methods'}, notifications:{ru:'Уведомления',kk:'Хабарландырулар',en:'Notifications'}, astanaCurrent:{ru:'Астана, текущее местоположение',kk:'Астана, ағымдағы орналасқан жер',en:'Astana, current location'}, incomingMessage:{ru:'Здравствуйте! Я уже выезжаю к вам.',kk:'Сәлеметсіз бе! Сізге қарай жолға шықтым.',en:'Hello! I am on my way to you.'}
   } as const
   const tx=(k:keyof typeof ui)=>ui[k][lang]
-  const problems=useMemo(()=>getProblems(lang),[lang])
   const masters=useMemo(()=>getMasters(lang),[lang])
   const stations=useMemo(()=>getStations(lang),[lang])
   const statusLabel=(value:Order['status'])=>statusText[value]?.[lang]||value
@@ -71,8 +54,8 @@ export default function Home(){
   const [tab,setTab]=useState<Tab>('home')
   const [stage,setStage]=useState<Stage>('start')
   const [selected,setSelected]=useState('')
-  const [serviceType,setServiceType]=useState<ServiceType>('road_assistance')
-  const [providerType,setProviderType]=useState<ProviderType>('master')
+  const [serviceType,setServiceType]=useState<string>('road_assistance')
+  const [providerType,setProviderType]=useState<ServiceProviderType>('master')
   const [locationText,setLocationText]=useState<string>(tx('astanaCurrent'))
   const [geoLoading,setGeoLoading]=useState(false)
   const [activeMaster,setActiveMaster]=useState(0)
@@ -85,9 +68,23 @@ export default function Home(){
   const [chatText,setChatText]=useState('')
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
 
-  const problem=useMemo(()=>problems.find(p=>p.id===selected),[selected])
+  const selectedService=useMemo(
+    ()=>getService(selected),
+    [selected],
+  )
+  const problem=selectedService
+    ? { title:selectedService.title[lang] }
+    : null
   const master=masters[activeMaster]
   const activeOrder=orders.find(o=>o.id===activeOrderId)
+  const primaryProviderType=(
+    service:ServiceDefinition | null,
+  ):ServiceProviderType=>service?.providerTypes[0]??'master'
+  const matchingTestMasters=useMemo(()=>{
+    if(!selectedService)return []
+    const allowed=new Set(selectedService.providerTypes)
+    return TEST_MASTER_LIST.filter(item=>allowed.has(item.providerType))
+  },[selectedService])
   const handleMapSelect = useCallback((index:number)=>{ setActiveMaster(index); setStage('result'); setTab('home') },[])
 
   useEffect(()=>{
@@ -159,25 +156,43 @@ export default function Home(){
   function notify(text:string){ setToast(text); window.setTimeout(()=>setToast(''),2300) }
   function vibrate(){ if('vibrate' in navigator) navigator.vibrate(25) }
   function goHome(){ setTab('home'); setStage('start'); setSelected(''); setServiceType('road_assistance'); setProviderType('master'); setActiveMaster(0); setActiveOrderId(''); setRating(0) }
-  function chooseProblem(id:string){ vibrate(); const route=routeForProblem(id); setSelected(id); setServiceType(route.serviceType); setProviderType(route.providerType) }
-  function findHelp(problemId?:string, route?:ServiceRoute){
-    const nextProblem=problemId||selected
-    if(!nextProblem){ notify(tx('firstChoose')); return }
-    const nextRoute=route||routeForProblem(nextProblem)
+  function chooseProblem(id:string){
+    const service=getService(id)
+    if(!service)return
     vibrate()
-    setSelected(nextProblem)
-    setServiceType(nextRoute.serviceType)
-    setProviderType(nextRoute.providerType)
+    setSelected(service.id)
+    setServiceType(service.serviceType)
+    setProviderType(primaryProviderType(service))
+  }
+
+  function findHelp(serviceId?:string){
+    const service=getService(serviceId||selected)
+    if(!service){
+      notify(tx('firstChoose'))
+      return
+    }
+
+    vibrate()
+    setSelected(service.id)
+    setServiceType(service.serviceType)
+    setProviderType(primaryProviderType(service))
     setTab('home')
     setStage('searching')
     window.setTimeout(()=>setStage('result'),1500)
   }
+
   function openService(serviceId:string){
-    const route=serviceRoutes[serviceId]
-    if(!route) return
-    if(serviceId==='station'){ setTab('sto'); return }
-    findHelp(route.problemId,route)
+    const service=getService(serviceId)
+    if(!service)return
+
+    if(service.id==='service_station'){
+      setTab('sto')
+      return
+    }
+
+    findHelp(service.id)
   }
+
   function useLocation(){
     if(!navigator.geolocation){ notify(tx('geoUnsupported')); return }
     if(!window.isSecureContext && window.location.hostname!=='localhost'){ notify(tx('geoHttps')); return }
@@ -190,7 +205,19 @@ export default function Home(){
   }
   async function createOrder(){
     try{
-      const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problem:problem?.title||tx('helpRoad'),location:locationText,client:'Ержан Т.',vehicle:'Toyota Prado 120',price:7000,serviceType,providerType})})
+      const response=await fetch('/api/orders',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          problem:selectedService?.title[lang]||tx('helpRoad'),
+          location:locationText,
+          client:'Ержан Т.',
+          vehicle:'Toyota Prado 120',
+          price:selectedService?.priceFrom??7000,
+          serviceType,
+          providerType,
+        }),
+      })
       const data=await response.json()
       if(!response.ok||!data.order) throw new Error(data.error||'Create order failed')
       const order:ClientOrder={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date(data.order.createdAt).toLocaleString(locale),status:data.order.status,serviceType:data.order.serviceType,providerType:data.order.providerType}
@@ -253,25 +280,17 @@ export default function Home(){
   function ServiceIcon({id}:{id:string}){
     const common={width:54,height:54,viewBox:'0 0 64 64',fill:'none',xmlns:'http://www.w3.org/2000/svg'} as const
     if(id==='tow') return <svg {...common}><path d="M8 40h31l8-10h7v16H8z" fill="#F5A800"/><path d="M13 30h22v10H13z" fill="#FFC928"/><circle cx="18" cy="49" r="6" fill="#17202B"/><circle cx="47" cy="49" r="6" fill="#17202B"/><path d="M39 31h7l5 7H39z" fill="#D7E8F8"/><path d="M5 26h14v4H5z" fill="#17202B"/></svg>
-    if(id==='battery') return <svg {...common}><rect x="12" y="17" width="40" height="35" rx="7" fill="#17202B"/><rect x="20" y="11" width="9" height="7" rx="2" fill="#17202B"/><rect x="36" y="11" width="9" height="7" rx="2" fill="#17202B"/><path d="M33 21l-8 14h8l-3 10 11-16h-8z" fill="#FFC928"/><path d="M17 27h7M20.5 23.5v7M42 27h7" stroke="#FFC928" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='wheel') return <svg {...common}><circle cx="32" cy="32" r="25" fill="#15181D"/><circle cx="32" cy="32" r="14" fill="#E9EDF1"/><circle cx="32" cy="32" r="5" fill="#15181D"/><path d="M32 18v9M32 37v9M18 32h9M37 32h9M22 22l6 6M36 36l6 6M42 22l-6 6M28 36l-6 6" stroke="#737C87" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='fuel') return <svg {...common}><path d="M15 10h31l4 8v36H14V18z" fill="#FFC928"/><path d="M20 16h22v14H20z" fill="#FFF5D0"/><path d="M47 20h5c4 0 6 3 6 7v13" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/><path d="M31 35c5 6 7 9 7 12a7 7 0 1 1-14 0c0-3 2-6 7-12z" fill="#17202B"/></svg>
-    if(id==='unlock') return <svg {...common}><rect x="13" y="29" width="38" height="27" rx="6" fill="#FFC928"/><path d="M22 29v-7c0-8 5-14 13-14 6 0 10 3 12 8" stroke="#17202B" strokeWidth="7" strokeLinecap="round"/><circle cx="32" cy="41" r="4" fill="#17202B"/><path d="M32 44v6" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
-    if(id==='repair') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#E7EDF3"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M25 12l3 5M39 12l-3 5" stroke="#17202B" strokeWidth="3" strokeLinecap="round"/><path d="M22 31h20" stroke="#6BAFE8" strokeWidth="3"/></svg>
-    if(id==='wash') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#DCE8F2"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M19 10l2-4M31 9V4M43 10l2-4" stroke="#46B8FF" strokeWidth="4" strokeLinecap="round"/></svg>
+    if(id==='jump_start') return <svg {...common}><rect x="12" y="17" width="40" height="35" rx="7" fill="#17202B"/><rect x="20" y="11" width="9" height="7" rx="2" fill="#17202B"/><rect x="36" y="11" width="9" height="7" rx="2" fill="#17202B"/><path d="M33 21l-8 14h8l-3 10 11-16h-8z" fill="#FFC928"/><path d="M17 27h7M20.5 23.5v7M42 27h7" stroke="#FFC928" strokeWidth="3" strokeLinecap="round"/></svg>
+    if(id==='wheel_change') return <svg {...common}><circle cx="32" cy="32" r="25" fill="#15181D"/><circle cx="32" cy="32" r="14" fill="#E9EDF1"/><circle cx="32" cy="32" r="5" fill="#15181D"/><path d="M32 18v9M32 37v9M18 32h9M37 32h9M22 22l6 6M36 36l6 6M42 22l-6 6M28 36l-6 6" stroke="#737C87" strokeWidth="3" strokeLinecap="round"/></svg>
+    if(id==='fuel_delivery') return <svg {...common}><path d="M15 10h31l4 8v36H14V18z" fill="#FFC928"/><path d="M20 16h22v14H20z" fill="#FFF5D0"/><path d="M47 20h5c4 0 6 3 6 7v13" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/><path d="M31 35c5 6 7 9 7 12a7 7 0 1 1-14 0c0-3 2-6 7-12z" fill="#17202B"/></svg>
+    if(id==='car_unlock') return <svg {...common}><rect x="13" y="29" width="38" height="27" rx="6" fill="#FFC928"/><path d="M22 29v-7c0-8 5-14 13-14 6 0 10 3 12 8" stroke="#17202B" strokeWidth="7" strokeLinecap="round"/><circle cx="32" cy="41" r="4" fill="#17202B"/><path d="M32 44v6" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
+    if(id==='road_assistance') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#E7EDF3"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M25 12l3 5M39 12l-3 5" stroke="#17202B" strokeWidth="3" strokeLinecap="round"/><path d="M22 31h20" stroke="#6BAFE8" strokeWidth="3"/></svg>
+    if(id==='car_wash') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#DCE8F2"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M19 10l2-4M31 9V4M43 10l2-4" stroke="#46B8FF" strokeWidth="4" strokeLinecap="round"/></svg>
+    if(id==='starter'||id==='generator'||id==='electrical_diagnostics') return <svg {...common}><rect x="12" y="12" width="40" height="40" rx="10" fill="#17202B"/><path d="M34 17L21 36h11l-3 11 15-22H33z" fill="#FFC928"/></svg>
     return <svg {...common}><path d="M10 26l22-17 22 17v29H10z" fill="#17202B"/><rect x="20" y="32" width="24" height="23" rx="3" fill="#FFC928"/><path d="M25 43h14M32 36v14" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
   }
 
-  const homeServices=[
-    {id:'tow',title:{ru:'Эвакуатор',kk:'Эвакуатор',en:'Tow truck'},price:'от 5 000 ₸'},
-    {id:'battery',title:{ru:'Прикурить аккумулятор',kk:'Аккумуляторды іске қосу',en:'Jump start'},price:'от 2 000 ₸'},
-    {id:'wheel',title:{ru:'Замена колеса',kk:'Дөңгелек ауыстыру',en:'Tire change'},price:'от 2 500 ₸'},
-    {id:'fuel',title:{ru:'Доставка топлива',kk:'Жанармай жеткізу',en:'Fuel delivery'},price:'от 3 000 ₸'},
-    {id:'unlock',title:{ru:'Вскрытие авто',kk:'Көлікті ашу',en:'Car unlock'},price:'от 3 000 ₸'},
-    {id:'repair',title:{ru:'Техпомощь на месте',kk:'Жолдағы техкөмек',en:'Road assistance'},price:'от 3 000 ₸'},
-    {id:'wash',title:{ru:'Автомойка',kk:'Автожуу',en:'Car wash'},price:'от 3 000 ₸'},
-    {id:'station',title:{ru:'СТО и ремонт',kk:'СТО және жөндеу',en:'Service & repair'},price:'—'}
-  ]
+  const homeServices=SERVICE_LIST
 
   function StartScreen(){ return <div className="home-screen">
     <header className="home-header">
@@ -284,7 +303,7 @@ export default function Home(){
 
     <section className="services-section">
       <div className="home-section-title"><h2>{lang==='kk'?'Танымал қызметтер':lang==='en'?'Popular services':'Популярные услуги'}</h2><button type="button" onClick={()=>notify(lang==='kk'?'Барлық қызметтер төменде көрсетілген':lang==='en'?'All services are shown below':'Все услуги показаны ниже')}>{lang==='kk'?'Барлық қызметтер':lang==='en'?'All services':'Все услуги'} ›</button></div>
-      <div className="service-grid">{homeServices.map(service=><button type="button" key={service.id} className="service-card" onClick={()=>openService(service.id)}><ServiceIcon id={service.id}/><strong>{service.title[lang]}</strong><small>{service.price}</small></button>)}</div>
+      <div className="service-grid">{homeServices.map(service=><button type="button" key={service.id} className="service-card" onClick={()=>openService(service.id)}><ServiceIcon id={service.id}/><strong>{service.title[lang]}</strong><small>{service.priceFrom===null?'—':`${lang==='en'?'from':'от'} ${service.priceFrom.toLocaleString('ru-RU')} ₸`}</small></button>)}</div>
     </section>
 
     <section className="home-location">
@@ -298,6 +317,9 @@ export default function Home(){
   function Searching(){ return <section className="searching-screen"><div className="radar"><span className="pulse one"/><span className="pulse two"/><span className="pulse three"/><div className="car-dot">🚗</div></div><h1>{tx('searching')}</h1><p>{problem?.title}</p><small>{locationText}</small><div className="loading-line"><i/></div><button type="button" onClick={()=>setStage('start')}>{tx('cancel')}</button></section> }
 
   function Result(){
+    const candidates=matchingTestMasters
+    const candidateCount=candidates.length
+
     return <section className="result-screen">
       <MapView
         lang={lang}
@@ -313,44 +335,56 @@ export default function Home(){
         <div className="handle"/>
 
         <div className="master-head">
-          <div className="master-avatar">3</div>
+          <div className="master-avatar">
+            {candidateCount||'—'}
+          </div>
 
           <div>
-            <small>{tx('threeReady')}</small>
-            <h2>{tx('threeReady')} <span>✓</span></h2>
-            <p>{tx('threeReadyDesc')}</p>
+            <small>{tx('suitableNearby')}</small>
+            <h2>
+              {candidateCount>0
+                ? `${candidateCount} · ${selectedService?.title[lang]||tx('helpRoad')}`
+                : tx('searchingMaster')}
+              <span>✓</span>
+            </h2>
+            <p>{tx('suitableDesc')}</p>
           </div>
         </div>
 
-        <div className="stats">
-          <span>
-            <b>Айбек</b>
-            8 мин
-          </span>
-          <span>
-            <b>Нурлан</b>
-            11 мин
-          </span>
-          <span>
-            <b>Санжар</b>
-            14 мин
-          </span>
-        </div>
+        {candidateCount>0&&(
+          <div className="stats">
+            {candidates.slice(0,3).map((candidate,index)=>(
+              <span key={candidate.id}>
+                <b>{candidate.name}</b>
+                {8+index*3} мин
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="summary">
           <span>{tx('yourProblem')}</span>
-          <b>{problem?.title}</b>
+          <b>{selectedService?.title[lang]||problem?.title}</b>
           <small>{locationText}</small>
         </div>
 
         <div className="price-actions">
           <div>
             <small>{tx('calloutCost')}</small>
-            <b>{master.price}</b>
+            <b>
+              {selectedService?.priceFrom===null
+                ? '—'
+                : `от ${(selectedService?.priceFrom??7000).toLocaleString('ru-RU')} ₸`}
+            </b>
           </div>
 
-          <button type="button" onClick={createOrder}>
-            {tx('call')} <strong>→</strong>
+          <button
+            type="button"
+            onClick={createOrder}
+            disabled={candidateCount===0}
+          >
+            {candidateCount>0?tx('call'):tx('searchingMaster')}
+            <strong>→</strong>
           </button>
         </div>
       </div>
@@ -402,7 +436,7 @@ export default function Home(){
             <p>
               {hasAssignedMaster
                 ? `${tx('assignedMaster')}: ${assignedMasterName}`
-                : tx('sentToThree')}
+                : tx('sentToSuitable')}
             </p>
           </div>
 
@@ -428,7 +462,7 @@ export default function Home(){
             <span>
               {hasAssignedMaster
                 ? tx('expectedArrival')
-                : tx('sentToThree')}
+                : tx('sentToSuitable')}
             </span>
             <b>{arrivalText}</b>
           </div>
@@ -497,5 +531,5 @@ export default function Home(){
   }
 
   const isHomeStart=tab==='home'&&stage==='start'
-  return <main className="app-shell"><div className={`phone ${isHomeStart?'home-phone':''}`}>{!isHomeStart&&<div className="topbar client-topbar"><Link href="/" className="role-back" aria-label={tx('roleBack')} title={tx('roleBack')}>←</Link><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}{renderTab()}<BottomNav tab={tab} onChange={setTab} lang={lang}/><ChatSheet open={chatOpen} masterName={master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>{toast&&<div className="toast">{toast}</div>}</div></main>
+  return <main className="app-shell"><div className={`phone ${isHomeStart?'home-phone':''}`}>{!isHomeStart&&<div className="topbar client-topbar"><Link href="/" className="role-back" aria-label={tx('roleBack')} title={tx('roleBack')}>←</Link><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}{renderTab()}<BottomNav tab={tab} onChange={setTab} lang={lang}/><ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>{toast&&<div className="toast">{toast}</div>}</div></main>
 }
