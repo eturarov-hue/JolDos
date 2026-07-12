@@ -54,7 +54,7 @@ export default function Home(){
     subtitle:{ru:'Выберите проблему — найдём проверенного мастера рядом.',kk:'Мәселені таңдаңыз — жақын жерден тексерілген шебер табамыз.',en:'Choose the problem — we will find a trusted specialist nearby.'},
     choose:{ru:'Выберите проблему',kk:'Мәселені таңдаңыз',en:'Choose a problem'}, required:{ru:'Обязательно',kk:'Міндетті',en:'Required'}, selected:{ru:'Выбрано',kk:'Таңдалды',en:'Selected'},
     location:{ru:'Ваше местоположение',kk:'Сіздің орналасқан жеріңіз',en:'Your location'}, find:{ru:'Найти ближайшую помощь',kk:'Жақын көмекті табу',en:'Find nearby help'}, searching:{ru:'Ищем ближайшего мастера',kk:'Жақын шеберді іздеп жатырмыз',en:'Searching for a nearby specialist'}, cancel:{ru:'Отменить поиск',kk:'Іздеуді тоқтату',en:'Cancel search'},
-    nearest:{ru:'Ближайший мастер',kk:'Ең жақын шебер',en:'Nearest specialist'}, call:{ru:'Вызвать мастера',kk:'Шеберді шақыру',en:'Request specialist'}, current:{ru:'Текущий заказ',kk:'Ағымдағы тапсырыс',en:'Current order'},
+    nearest:{ru:'Ближайший мастер',kk:'Ең жақын шебер',en:'Nearest specialist'}, threeReady:{ru:'3 мастера рядом',kk:'Жақын жерде 3 шебер бар',en:'3 specialists nearby'}, threeReadyDesc:{ru:'После вызова заказ одновременно получат Айбек, Нурлан и Санжар',kk:'Шақырғаннан кейін тапсырысты Айбек, Нұрлан және Санжар бір уақытта алады',en:'After requesting help, Aibek, Nurlan and Sanzhar will receive the order at the same time'}, call:{ru:'Отправить заказ 3 мастерам',kk:'Тапсырысты 3 шеберге жіберу',en:'Send order to 3 specialists'}, current:{ru:'Текущий заказ',kk:'Ағымдағы тапсырыс',en:'Current order'},
     home:{ru:'Главная',kk:'Басты бет',en:'Home'}, map:{ru:'Карта',kk:'Карта',en:'Map'}, sto:{ru:'СТО',kk:'Автосервис',en:'Services'}, orders:{ru:'Заказы',kk:'Тапсырыстар',en:'Orders'}, profile:{ru:'Профиль',kk:'Профиль',en:'Profile'}, roleBack:{ru:'Сменить роль',kk:'Рөлді ауыстыру',en:'Change role'},
     availability:{ru:'Помощь доступна 24/7',kk:'Көмек тәулік бойы қолжетімді',en:'Help is available 24/7'}, emergency:{ru:'Экстренная помощь',kk:'Шұғыл көмек',en:'Emergency assistance'}, call112:{ru:'Позвонить 112',kk:'112 нөміріне қоңырау шалу',en:'Call 112'}, step1:{ru:'Шаг 1',kk:'1-қадам',en:'Step 1'},
     ratingWord:{ru:'рейтинг',kk:'рейтинг',en:'rating'}, arrival:{ru:'прибытие',kk:'келу уақыты',en:'arrival'}, verified:{ru:'проверены',kk:'тексерілген',en:'verified'}, firstChoose:{ru:'Сначала выберите проблему',kk:'Алдымен мәселені таңдаңыз',en:'Choose a problem first'}, geoUnsupported:{ru:'Геолокация не поддерживается',kk:'Геолокацияға қолдау көрсетілмейді',en:'Geolocation is not supported'}, geoHttps:{ru:'На телефоне геолокация работает только через HTTPS',kk:'Телефонда геолокация тек HTTPS арқылы жұмыс істейді',en:'On mobile, geolocation requires HTTPS'}, geoFound:{ru:'Местоположение определено',kk:'Орналасқан жер анықталды',en:'Location detected'}, geoAllow:{ru:'Разрешите доступ к геолокации',kk:'Геолокацияға рұқсат беріңіз',en:'Allow location access'},
@@ -297,7 +297,65 @@ export default function Home(){
 
   function Searching(){ return <section className="searching-screen"><div className="radar"><span className="pulse one"/><span className="pulse two"/><span className="pulse three"/><div className="car-dot">🚗</div></div><h1>{tx('searching')}</h1><p>{problem?.title}</p><small>{locationText}</small><div className="loading-line"><i/></div><button type="button" onClick={()=>setStage('start')}>{tx('cancel')}</button></section> }
 
-  function Result(){ return <section className="result-screen"><MapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading}/><div className="bottom-sheet"><div className="handle"/><div className="master-head"><div className="master-avatar">{master.initials}</div><div><small>{tx('nearest')}</small><h2>{master.name} <span>✓</span></h2><p>{master.role}</p></div><div className="master-actions"><button type="button" onClick={()=>setChatOpen(true)}>✉</button><a href={`tel:${master.phone}`} className="round-call">☎</a></div></div><div className="stats"><span><b>★ {master.rating}</b>{master.reviews} {tx('reviews')}</span><span><b>{master.eta}</b>{tx('toYou')}</span><span><b>{master.distance}</b>{tx('distanceWord')}</span></div><div className="summary"><span>{tx('yourProblem')}</span><b>{problem?.title}</b><small>{locationText}</small></div><div className="price-actions"><div><small>{tx('calloutCost')}</small><b>{master.price}</b></div><button type="button" onClick={createOrder}>{tx('call')} <strong>→</strong></button></div><div className="master-tabs">{masters.map((m,i)=><button type="button" className={i===activeMaster?'active':''} key={m.name} onClick={()=>setActiveMaster(i)}>{m.eta}</button>)}</div></div></section> }
+  function Result(){
+    return <section className="result-screen">
+      <MapView
+        lang={lang}
+        coords={coords}
+        masters={masters}
+        activeMaster={activeMaster}
+        onSelectMaster={()=>{}}
+        onUseLocation={useLocation}
+        geoLoading={geoLoading}
+      />
+
+      <div className="bottom-sheet">
+        <div className="handle"/>
+
+        <div className="master-head">
+          <div className="master-avatar">3</div>
+
+          <div>
+            <small>{tx('threeReady')}</small>
+            <h2>{tx('threeReady')} <span>✓</span></h2>
+            <p>{tx('threeReadyDesc')}</p>
+          </div>
+        </div>
+
+        <div className="stats">
+          <span>
+            <b>Айбек</b>
+            8 мин
+          </span>
+          <span>
+            <b>Нурлан</b>
+            11 мин
+          </span>
+          <span>
+            <b>Санжар</b>
+            14 мин
+          </span>
+        </div>
+
+        <div className="summary">
+          <span>{tx('yourProblem')}</span>
+          <b>{problem?.title}</b>
+          <small>{locationText}</small>
+        </div>
+
+        <div className="price-actions">
+          <div>
+            <small>{tx('calloutCost')}</small>
+            <b>{master.price}</b>
+          </div>
+
+          <button type="button" onClick={createOrder}>
+            {tx('call')} <strong>→</strong>
+          </button>
+        </div>
+      </div>
+    </section>
+  }
 
   function ActiveOrder(){
     if(!activeOrder) return <StartScreen/>
