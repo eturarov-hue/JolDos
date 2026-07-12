@@ -58,7 +58,7 @@ export default function Home(){
     home:{ru:'Главная',kk:'Басты бет',en:'Home'}, map:{ru:'Карта',kk:'Карта',en:'Map'}, sto:{ru:'СТО',kk:'Автосервис',en:'Services'}, orders:{ru:'Заказы',kk:'Тапсырыстар',en:'Orders'}, profile:{ru:'Профиль',kk:'Профиль',en:'Profile'}, roleBack:{ru:'Сменить роль',kk:'Рөлді ауыстыру',en:'Change role'},
     availability:{ru:'Помощь доступна 24/7',kk:'Көмек тәулік бойы қолжетімді',en:'Help is available 24/7'}, emergency:{ru:'Экстренная помощь',kk:'Шұғыл көмек',en:'Emergency assistance'}, call112:{ru:'Позвонить 112',kk:'112 нөміріне қоңырау шалу',en:'Call 112'}, step1:{ru:'Шаг 1',kk:'1-қадам',en:'Step 1'},
     ratingWord:{ru:'рейтинг',kk:'рейтинг',en:'rating'}, arrival:{ru:'прибытие',kk:'келу уақыты',en:'arrival'}, verified:{ru:'проверены',kk:'тексерілген',en:'verified'}, firstChoose:{ru:'Сначала выберите проблему',kk:'Алдымен мәселені таңдаңыз',en:'Choose a problem first'}, geoUnsupported:{ru:'Геолокация не поддерживается',kk:'Геолокацияға қолдау көрсетілмейді',en:'Geolocation is not supported'}, geoHttps:{ru:'На телефоне геолокация работает только через HTTPS',kk:'Телефонда геолокация тек HTTPS арқылы жұмыс істейді',en:'On mobile, geolocation requires HTTPS'}, geoFound:{ru:'Местоположение определено',kk:'Орналасқан жер анықталды',en:'Location detected'}, geoAllow:{ru:'Разрешите доступ к геолокации',kk:'Геолокацияға рұқсат беріңіз',en:'Allow location access'},
-    helpRoad:{ru:'Помощь на дороге',kk:'Жолдағы көмек',en:'Roadside assistance'}, searchingMaster:{ru:'Ищем мастера',kk:'Шебер ізделуде',en:'Searching for a specialist'}, requestSent:{ru:'Заявка отправлена мастерам',kk:'Өтінім шеберлерге жіберілді',en:'Request sent to specialists'}, requestFailed:{ru:'Не удалось отправить заявку',kk:'Өтінімді жіберу мүмкін болмады',en:'Could not send request'}, cancelOrder:{ru:'Отменить заказ',kk:'Тапсырысты болдырмау',en:'Cancel order'}, cancelConfirm:{ru:'Отменить текущий заказ?',kk:'Ағымдағы тапсырысты болдырмау керек пе?',en:'Cancel the current order?'}, cancelSuccess:{ru:'Заказ отменён',kk:'Тапсырыс болдырылмады',en:'Order cancelled'}, cancelFailed:{ru:'Не удалось отменить заказ',kk:'Тапсырысты болдырмау мүмкін болмады',en:'Could not cancel the order'}, workDoneRate:{ru:'Работа завершена — оцените мастера',kk:'Жұмыс аяқталды — шеберді бағалаңыз',en:'Work completed — rate the specialist'}, rateRequired:{ru:'Поставьте оценку мастеру',kk:'Шеберге баға беріңіз',en:'Rate the specialist'}, thanksRating:{ru:'Спасибо за оценку!',kk:'Бағаңызға рақмет!',en:'Thank you for your rating!'}, messageSent:{ru:'Сообщение отправлено',kk:'Хабарлама жіберілді',en:'Message sent'},
+    helpRoad:{ru:'Помощь на дороге',kk:'Жолдағы көмек',en:'Roadside assistance'}, searchingMaster:{ru:'Ищем мастера',kk:'Шебер ізделуде',en:'Searching for a specialist'}, requestSent:{ru:'Заявка отправлена мастерам',kk:'Өтінім шеберлерге жіберілді',en:'Request sent to specialists'}, requestFailed:{ru:'Не удалось отправить заявку',kk:'Өтінімді жіберу мүмкін болмады',en:'Could not send request'}, sentToThree:{ru:'Заказ отправлен 3 мастерам',kk:'Тапсырыс 3 шеберге жіберілді',en:'Order sent to 3 specialists'}, waitingAcceptance:{ru:'Ожидаем, кто первым примет заказ',kk:'Тапсырысты кім бірінші қабылдайтынын күтеміз',en:'Waiting for the first specialist to accept'}, assignedMaster:{ru:'Назначенный мастер',kk:'Тағайындалған шебер',en:'Assigned specialist'}, cancelOrder:{ru:'Отменить заказ',kk:'Тапсырысты болдырмау',en:'Cancel order'}, cancelConfirm:{ru:'Отменить текущий заказ?',kk:'Ағымдағы тапсырысты болдырмау керек пе?',en:'Cancel the current order?'}, cancelSuccess:{ru:'Заказ отменён',kk:'Тапсырыс болдырылмады',en:'Order cancelled'}, cancelFailed:{ru:'Не удалось отменить заказ',kk:'Тапсырысты болдырмау мүмкін болмады',en:'Could not cancel the order'}, workDoneRate:{ru:'Работа завершена — оцените мастера',kk:'Жұмыс аяқталды — шеберді бағалаңыз',en:'Work completed — rate the specialist'}, rateRequired:{ru:'Поставьте оценку мастеру',kk:'Шеберге баға беріңіз',en:'Rate the specialist'}, thanksRating:{ru:'Спасибо за оценку!',kk:'Бағаңызға рақмет!',en:'Thank you for your rating!'}, messageSent:{ru:'Сообщение отправлено',kk:'Хабарлама жіберілді',en:'Message sent'},
     findPrefix:{ru:'Найти помощь',kk:'Көмек табу',en:'Find help'}, reviews:{ru:'отзывов',kk:'пікір',en:'reviews'}, toYou:{ru:'до вас',kk:'сізге дейін',en:'to you'}, distanceWord:{ru:'расстояние',kk:'қашықтық',en:'distance'}, yourProblem:{ru:'Ваша проблема',kk:'Сіздің мәселеңіз',en:'Your problem'}, calloutCost:{ru:'Стоимость выезда',kk:'Шақыру құны',en:'Call-out price'}, expectedArrival:{ru:'Ожидаемое прибытие',kk:'Күтілетін келу уақыты',en:'Expected arrival'}, onSite:{ru:'Мастер на месте',kk:'Шебер орнында',en:'Specialist is on site'}, waitUpdate:{ru:'Ожидать обновление от мастера',kk:'Шебердің жаңартуын күту',en:'Wait for specialist update'}, statusByMaster:{ru:'Статус меняет мастер в JolDos Master',kk:'Мәртебені JolDos Master қолданбасындағы шебер өзгертеді',en:'The specialist updates the status in JolDos Master'}, howWas:{ru:'Как всё прошло?',kk:'Қызмет қалай өтті?',en:'How did it go?'}, rateWork:{ru:'Оцените работу мастера',kk:'Шебердің жұмысын бағалаңыз',en:'Rate the specialist’s work'}, finishHome:{ru:'Завершить и вернуться на главную',kk:'Аяқтап, басты бетке оралу',en:'Finish and return home'},
     mapHelp:{ru:'Карта помощи',kk:'Көмек картасы',en:'Assistance map'}, chooseNearest:{ru:'Выберите ближайшего мастера',kk:'Ең жақын шеберді таңдаңыз',en:'Choose the nearest specialist'}, catalog:{ru:'Каталог СТО',kk:'Автосервистер каталогы',en:'Service center directory'}, trustedAstana:{ru:'Проверенные сервисы Астаны',kk:'Астанадағы тексерілген автосервистер',en:'Verified service centers in Astana'}, cardOpened:{ru:'Карточка открыта',kk:'Карточка ашылды',en:'Card opened'}, myOrders:{ru:'Мои заказы',kk:'Менің тапсырыстарым',en:'My orders'}, historyCurrent:{ru:'История и текущие заявки',kk:'Тарих және ағымдағы өтінімдер',en:'History and active requests'}, noOrders:{ru:'Заказов пока нет',kk:'Әзірге тапсырыс жоқ',en:'No orders yet'}, noOrdersDesc:{ru:'Выберите проблему на главной и вызовите мастера.',kk:'Басты беттен мәселені таңдап, шебер шақырыңыз.',en:'Choose a problem on the home screen and request a specialist.'}, openOrder:{ru:'Открыть заказ',kk:'Тапсырысты ашу',en:'Open order'}, settingsTitle:{ru:'Настройки JolDos',kk:'JolDos баптаулары',en:'JolDos settings'}, userName:{ru:'Пользователь JolDos',kk:'JolDos пайдаланушысы',en:'JolDos user'}, supportCall:{ru:'Позвонить в поддержку',kk:'Қолдау қызметіне қоңырау шалу',en:'Call support'}, cars:{ru:'Мои автомобили',kk:'Менің көліктерім',en:'My vehicles'}, payment:{ru:'Способы оплаты',kk:'Төлем тәсілдері',en:'Payment methods'}, notifications:{ru:'Уведомления',kk:'Хабарландырулар',en:'Notifications'}, astanaCurrent:{ru:'Астана, текущее местоположение',kk:'Астана, ағымдағы орналасқан жер',en:'Astana, current location'}, incomingMessage:{ru:'Здравствуйте! Я уже выезжаю к вам.',kk:'Сәлеметсіз бе! Сізге қарай жолға шықтым.',en:'Hello! I am on my way to you.'}
   } as const
@@ -145,7 +145,7 @@ export default function Home(){
           return
         }
         const updatedStatus=String(data.order.status)
-        setOrders(prev=>prev.map(o=>o.id===activeOrderId?{...o,master:data.order.master||o.master,status:data.order.status}:o))
+        setOrders(prev=>prev.map(o=>o.id===activeOrderId?{...o,master:data.order.master||tx('searchingMaster'),status:data.order.status}:o))
         if(updatedStatus==='Отменён'){
           setActiveOrderId('')
           setStage('start')
@@ -301,8 +301,132 @@ export default function Home(){
 
   function ActiveOrder(){
     if(!activeOrder) return <StartScreen/>
+
     const currentIndex=statusSteps.indexOf(activeOrder.status)
-    return <section className="active-screen"><MapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading}/><div className="order-sheet"><div className="handle"/><div className="order-top"><span className="live-dot"/><div><small>{tx('current')}</small><h2>{statusLabel(activeOrder.status)}</h2><p>{master.name} · {master.eta}</p></div><div className="order-contact"><button type="button" onClick={()=>setChatOpen(true)}>✉</button><a href={`tel:${master.phone}`}>☎</a></div></div><div className="timeline">{statusSteps.slice(0,4).map((s,i)=><div className={i<=currentIndex?'done':''} key={s}><i>{i<currentIndex?'✓':i+1}</i><span>{statusLabel(s)}</span></div>)}</div>{activeOrder.status!=='Завершён'?<><div className="eta-card"><span>{tx('expectedArrival')}</span><b>{activeOrder.status==='Мастер принял заказ'?lang==='en'?'8 min':'8 мин':activeOrder.status==='Мастер едет'?lang==='en'?'5 min':'5 мин':tx('onSite')}</b></div><button type="button" className="advance" onClick={()=>notify(tx('statusByMaster'))}>{tx('waitUpdate')}</button><button type="button" className="advance" onClick={cancelActiveOrder} style={{marginTop:10,background:'#fff',color:'#b42318',border:'1px solid #f3b4ad'}}>{tx('cancelOrder')}</button></>:<div className="rating-card"><h3>{tx('howWas')}</h3><p>{tx('rateWork')}</p><div>{[1,2,3,4,5].map(star=><button type="button" key={star} className={rating>=star?'active':''} onClick={()=>setRating(star)}>★</button>)}</div><button type="button" className="finish" onClick={finishAndHome}>{tx('finishHome')}</button></div>}</div></section>
+    const hasAssignedMaster=Boolean(
+      activeOrder.master &&
+      activeOrder.master!==tx('searchingMaster')
+    )
+    const assignedMasterName=hasAssignedMaster
+      ? activeOrder.master
+      : tx('searchingMaster')
+
+    const arrivalText=!hasAssignedMaster
+      ? tx('waitingAcceptance')
+      : activeOrder.status==='Мастер принял заказ'
+        ? (lang==='en'?'About 8 min':'Около 8 мин')
+        : activeOrder.status==='Мастер едет'
+          ? (lang==='en'?'About 5 min':'Около 5 мин')
+          : activeOrder.status==='Мастер прибыл'||activeOrder.status==='Работа выполняется'
+            ? tx('onSite')
+            : tx('waitingAcceptance')
+
+    return <section className="active-screen">
+      <MapView
+        lang={lang}
+        coords={coords}
+        masters={hasAssignedMaster?masters:[]}
+        activeMaster={activeMaster}
+        onSelectMaster={handleMapSelect}
+        onUseLocation={useLocation}
+        geoLoading={geoLoading}
+      />
+
+      <div className="order-sheet">
+        <div className="handle"/>
+
+        <div className="order-top">
+          <span className="live-dot"/>
+
+          <div>
+            <small>{tx('current')}</small>
+            <h2>{statusLabel(activeOrder.status)}</h2>
+            <p>
+              {hasAssignedMaster
+                ? `${tx('assignedMaster')}: ${assignedMasterName}`
+                : tx('sentToThree')}
+            </p>
+          </div>
+
+          {hasAssignedMaster&&(
+            <div className="order-contact">
+              <button type="button" onClick={()=>setChatOpen(true)}>✉</button>
+              <a href="tel:+77000000000">☎</a>
+            </div>
+          )}
+        </div>
+
+        <div className="timeline">
+          {statusSteps.slice(0,4).map((s,i)=>
+            <div className={i<=currentIndex?'done':''} key={s}>
+              <i>{i<currentIndex?'✓':i+1}</i>
+              <span>{statusLabel(s)}</span>
+            </div>
+          )}
+        </div>
+
+        {activeOrder.status!=='Завершён'?<>
+          <div className="eta-card">
+            <span>
+              {hasAssignedMaster
+                ? tx('expectedArrival')
+                : tx('sentToThree')}
+            </span>
+            <b>{arrivalText}</b>
+          </div>
+
+          <button
+            type="button"
+            className="advance"
+            onClick={()=>notify(tx('statusByMaster'))}
+          >
+            {hasAssignedMaster
+              ? tx('waitUpdate')
+              : tx('waitingAcceptance')}
+          </button>
+
+          <button
+            type="button"
+            className="advance"
+            onClick={cancelActiveOrder}
+            style={{
+              marginTop:10,
+              background:'#fff',
+              color:'#b42318',
+              border:'1px solid #f3b4ad'
+            }}
+          >
+            {tx('cancelOrder')}
+          </button>
+        </>:(
+          <div className="rating-card">
+            <h3>{tx('howWas')}</h3>
+            <p>{tx('rateWork')}</p>
+
+            <div>
+              {[1,2,3,4,5].map(star=>
+                <button
+                  type="button"
+                  key={star}
+                  className={rating>=star?'active':''}
+                  onClick={()=>setRating(star)}
+                >
+                  ★
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="finish"
+              onClick={finishAndHome}
+            >
+              {tx('finishHome')}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   }
 
   function renderHome(){ if(stage==='searching') return <Searching/>; if(stage==='result') return <Result/>; if(stage==='active') return <ActiveOrder/>; return <StartScreen/> }
