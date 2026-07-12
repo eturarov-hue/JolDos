@@ -20,6 +20,15 @@ type ProviderType =
   | 'car_wash'
   | 'service_station'
 
+type OrderStatus =
+  | 'Новый заказ'
+  | 'Мастер принял заказ'
+  | 'Мастер едет'
+  | 'Мастер прибыл'
+  | 'Работа выполняется'
+  | 'Завершён'
+  | 'Отменён'
+
 type DbOrder = {
   id: string
   problem: string
@@ -27,10 +36,13 @@ type DbOrder = {
   client: string
   vehicle: string
   price: number
-  status: string
+  status: OrderStatus
   master: string | null
   service_type: ServiceType
   provider_type: ProviderType
+  cancelled_by: string | null
+  cancellation_reason: string | null
+  cancelled_at: string | null
   created_at: string
 }
 
@@ -41,10 +53,13 @@ type SharedOrder = {
   client: string
   vehicle: string
   price: number
-  status: string
+  status: OrderStatus
   master?: string
   serviceType: ServiceType
   providerType: ProviderType
+  cancelledBy?: string
+  cancellationReason?: string
+  cancelledAt?: string
   createdAt: string
 }
 
@@ -54,22 +69,67 @@ type OrderPatch = {
   client?: string
   vehicle?: string
   price?: number
-  status?: string
+  status?: OrderStatus
   master?: string | null
   service_type?: ServiceType
   provider_type?: ProviderType
+  cancelled_by?: string | null
+  cancellation_reason?: string | null
+  cancelled_at?: string | null
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '')
+type RejectionRow = {
+  order_id: string
+  provider_name: string
+  provider_type: ProviderType
+}
+
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '')
 
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-const completedStatuses = new Set(['Завершён', 'Отменён'])
+const terminalStatuses = new Set<OrderStatus>([
+  'Завершён',
+  'Отменён',
+])
 
-const serviceProviderMap: Record<ServiceType, ProviderType> = {
+const statusTransitions: Record<OrderStatus, OrderStatus[]> = {
+  'Новый заказ': [
+    'Мастер принял заказ',
+    'Отменён',
+  ],
+  'Мастер принял заказ': [
+    'Мастер едет',
+    'Отменён',
+  ],
+  'Мастер едет': [
+    'Мастер прибыл',
+    'Отменён',
+  ],
+  'Мастер прибыл': [
+    'Работа выполняется',
+    'Отменён',
+  ],
+  'Работа выполняется': [
+    'Завершён',
+    'Отменён',
+  ],
+  'Завершён': [],
+  'Отменён': [],
+}
+
+const allowedStatuses = new Set<OrderStatus>(
+  Object.keys(statusTransitions) as OrderStatus[]
+)
+
+const serviceProviderMap: Record<
+  ServiceType,
+  ProviderType
+> = {
   road_assistance: 'master',
   tow_truck: 'tow_truck',
   battery: 'electrician',
@@ -127,7 +187,15 @@ function errorResponse(
   )
 }
 
-function supabaseHeaders(extra: Record<string, string> = {}) {
+function noStoreHeaders() {
+  return {
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+  }
+}
+
+function supabaseHeaders(
+  extra: Record<string, string> = {}
+) {
   if (!supabaseKey) {
     throw new Error('Supabase API key is missing')
   }
@@ -144,7 +212,13 @@ function buildOrdersUrl(params: URLSearchParams) {
   return `${supabaseUrl}/rest/v1/orders?${params.toString()}`
 }
 
-async function readJson(response: Response): Promise<unknown> {
+function buildRejectionsUrl(params: URLSearchParams) {
+  return `${supabaseUrl}/rest/v1/order_rejections?${params.toString()}`
+}
+
+async function readJson(
+  response: Response
+): Promise<unknown> {
   const text = await response.text()
 
   if (!text) {
@@ -158,8 +232,12 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-function normalizeServiceType(value: unknown): ServiceType {
-  const serviceType = String(value || '').trim() as ServiceType
+function normalizeServiceType(
+  value: unknown
+): ServiceType {
+  const serviceType = String(
+    value || ''
+  ).trim() as ServiceType
 
   if (allowedServiceTypes.has(serviceType)) {
     return serviceType
@@ -172,13 +250,27 @@ function normalizeProviderType(
   value: unknown,
   serviceType: ServiceType
 ): ProviderType {
-  const providerType = String(value || '').trim() as ProviderType
+  const providerType = String(
+    value || ''
+  ).trim() as ProviderType
 
   if (allowedProviderTypes.has(providerType)) {
     return providerType
   }
 
   return serviceProviderMap[serviceType]
+}
+
+function normalizeStatus(
+  value: unknown
+): OrderStatus | null {
+  const status = String(
+    value || ''
+  ).trim() as OrderStatus
+
+  return allowedStatuses.has(status)
+    ? status
+    : null
 }
 
 function toShared(row: DbOrder): SharedOrder {
@@ -191,10 +283,51 @@ function toShared(row: DbOrder): SharedOrder {
     price: Number(row.price),
     status: row.status,
     master: row.master || undefined,
-    serviceType: row.service_type || 'road_assistance',
-    providerType: row.provider_type || 'master',
+    serviceType:
+      row.service_type || 'road_assistance',
+    providerType:
+      row.provider_type || 'master',
+    cancelledBy:
+      row.cancelled_by || undefined,
+    cancellationReason:
+      row.cancellation_reason || undefined,
+    cancelledAt:
+      row.cancelled_at || undefined,
     createdAt: row.created_at,
   }
+}
+
+function sortByCreatedAt(rows: DbOrder[]) {
+  return [...rows].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() -
+      new Date(a.created_at).getTime()
+  )
+}
+
+function uniqueOrders(rows: DbOrder[]) {
+  const map = new Map<string, DbOrder>()
+
+  for (const row of rows) {
+    map.set(String(row.id), row)
+  }
+
+  return sortByCreatedAt(
+    Array.from(map.values())
+  )
+}
+
+function canChangeStatus(
+  currentStatus: OrderStatus,
+  nextStatus: OrderStatus
+) {
+  if (currentStatus === nextStatus) {
+    return true
+  }
+
+  return statusTransitions[
+    currentStatus
+  ].includes(nextStatus)
 }
 
 async function fetchOrders(
@@ -203,11 +336,14 @@ async function fetchOrders(
   rows?: DbOrder[]
   error?: NextResponse
 }> {
-  const response = await fetch(buildOrdersUrl(params), {
-    method: 'GET',
-    headers: supabaseHeaders(),
-    cache: 'no-store',
-  })
+  const response = await fetch(
+    buildOrdersUrl(params),
+    {
+      method: 'GET',
+      headers: supabaseHeaders(),
+      cache: 'no-store',
+    }
+  )
 
   const data = await readJson(response)
 
@@ -222,7 +358,9 @@ async function fetchOrders(
   }
 
   return {
-    rows: (Array.isArray(data) ? data : []) as DbOrder[],
+    rows: (
+      Array.isArray(data) ? data : []
+    ) as DbOrder[],
   }
 }
 
@@ -251,6 +389,87 @@ async function fetchOrderById(
   }
 }
 
+async function fetchRejectedOrderIds(
+  providerName: string
+): Promise<{
+  ids?: Set<string>
+  error?: NextResponse
+}> {
+  const params = new URLSearchParams()
+
+  params.set('select', 'order_id')
+  params.set(
+    'provider_name',
+    `eq.${providerName}`
+  )
+
+  const response = await fetch(
+    buildRejectionsUrl(params),
+    {
+      method: 'GET',
+      headers: supabaseHeaders(),
+      cache: 'no-store',
+    }
+  )
+
+  const data = await readJson(response)
+
+  if (!response.ok) {
+    return {
+      error: errorResponse(
+        'Не удалось получить отказы исполнителя',
+        data,
+        response.status
+      ),
+    }
+  }
+
+  const rows = (
+    Array.isArray(data) ? data : []
+  ) as RejectionRow[]
+
+  return {
+    ids: new Set(
+      rows.map(row => String(row.order_id))
+    ),
+  }
+}
+
+async function createRejection(
+  orderId: string,
+  providerName: string,
+  providerType: ProviderType
+): Promise<NextResponse | null> {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/order_rejections`,
+    {
+      method: 'POST',
+      headers: supabaseHeaders({
+        Prefer:
+          'resolution=merge-duplicates,return=minimal',
+      }),
+      body: JSON.stringify({
+        order_id: orderId,
+        provider_name: providerName,
+        provider_type: providerType,
+      }),
+      cache: 'no-store',
+    }
+  )
+
+  const data = await readJson(response)
+
+  if (!response.ok) {
+    return errorResponse(
+      'Не удалось сохранить отказ исполнителя',
+      data,
+      response.status
+    )
+  }
+
+  return null
+}
+
 async function findCurrentOrderId(): Promise<{
   id?: string
   error?: NextResponse
@@ -258,15 +477,21 @@ async function findCurrentOrderId(): Promise<{
   const params = new URLSearchParams()
 
   params.set('select', 'id')
-  params.set('status', 'not.in.(Завершён,Отменён)')
+  params.set(
+    'status',
+    'not.in.(Завершён,Отменён)'
+  )
   params.set('order', 'created_at.desc')
   params.set('limit', '1')
 
-  const response = await fetch(buildOrdersUrl(params), {
-    method: 'GET',
-    headers: supabaseHeaders(),
-    cache: 'no-store',
-  })
+  const response = await fetch(
+    buildOrdersUrl(params),
+    {
+      method: 'GET',
+      headers: supabaseHeaders(),
+      cache: 'no-store',
+    }
+  )
 
   const data = await readJson(response)
 
@@ -280,7 +505,10 @@ async function findCurrentOrderId(): Promise<{
     }
   }
 
-  if (!Array.isArray(data) || !data[0]?.id) {
+  if (
+    !Array.isArray(data) ||
+    !data[0]?.id
+  ) {
     return {}
   }
 
@@ -289,54 +517,59 @@ async function findCurrentOrderId(): Promise<{
   }
 }
 
-function sortByCreatedAt(rows: DbOrder[]) {
-  return [...rows].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() -
-      new Date(a.created_at).getTime()
-  )
-}
-
-function uniqueOrders(rows: DbOrder[]) {
-  const result = new Map<string, DbOrder>()
-
-  for (const row of rows) {
-    result.set(String(row.id), row)
-  }
-
-  return sortByCreatedAt(Array.from(result.values()))
-}
-
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest
+) {
   try {
     if (!supabaseUrl || !supabaseKey) {
       return configError()
     }
 
-    const id = request.nextUrl.searchParams.get('id')
-    const client = request.nextUrl.searchParams.get('client')
-    const master = request.nextUrl.searchParams.get('master')
-    const status = request.nextUrl.searchParams.get('status')
+    const id =
+      request.nextUrl.searchParams.get('id')
+
+    const client =
+      request.nextUrl.searchParams.get(
+        'client'
+      )
+
+    const master =
+      request.nextUrl.searchParams.get(
+        'master'
+      )
+
+    const status =
+      request.nextUrl.searchParams.get(
+        'status'
+      )
 
     const requestedServiceType =
-      request.nextUrl.searchParams.get('service_type') ||
-      request.nextUrl.searchParams.get('serviceType')
+      request.nextUrl.searchParams.get(
+        'service_type'
+      ) ||
+      request.nextUrl.searchParams.get(
+        'serviceType'
+      )
 
     const requestedProviderType =
-      request.nextUrl.searchParams.get('provider_type') ||
-      request.nextUrl.searchParams.get('providerType')
+      request.nextUrl.searchParams.get(
+        'provider_type'
+      ) ||
+      request.nextUrl.searchParams.get(
+        'providerType'
+      )
 
-    /*
-     * Запрос конкретного заказа.
-     */
     if (id) {
-      const result = await fetchOrderById(id)
+      const result =
+        await fetchOrderById(id)
 
       if (result.error) {
         return result.error
       }
 
-      const order = result.order ? toShared(result.order) : null
+      const order = result.order
+        ? toShared(result.order)
+        : null
 
       return NextResponse.json(
         {
@@ -344,61 +577,84 @@ export async function GET(request: NextRequest) {
           orders: order ? [order] : [],
         },
         {
-          headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-          },
+          headers: noStoreHeaders(),
         }
       )
     }
 
-    /*
-     * Кабинет исполнителя.
-     *
-     * Исполнитель получает:
-     * 1. свои ранее принятые заказы;
-     * 2. новые свободные заказы только своего provider_type.
-     */
     if (master) {
-      const providerType = normalizeProviderType(
-        requestedProviderType || 'master',
-        'road_assistance'
-      )
+      const providerType =
+        normalizeProviderType(
+          requestedProviderType || 'master',
+          'road_assistance'
+        )
 
-      const assignedParams = new URLSearchParams()
+      const assignedParams =
+        new URLSearchParams()
 
       assignedParams.set('select', '*')
-      assignedParams.set('master', `eq.${master}`)
-      assignedParams.set('order', 'created_at.desc')
+      assignedParams.set(
+        'master',
+        `eq.${master}`
+      )
+      assignedParams.set(
+        'order',
+        'created_at.desc'
+      )
 
       if (status) {
-        assignedParams.set('status', `eq.${status}`)
-      }
-
-      if (requestedServiceType) {
         assignedParams.set(
-          'service_type',
-          `eq.${normalizeServiceType(requestedServiceType)}`
+          'status',
+          `eq.${status}`
         )
       }
 
-      const openParams = new URLSearchParams()
+      const openParams =
+        new URLSearchParams()
 
       openParams.set('select', '*')
-      openParams.set('master', 'is.null')
-      openParams.set('status', 'eq.Новый заказ')
-      openParams.set('provider_type', `eq.${providerType}`)
-      openParams.set('order', 'created_at.desc')
+      openParams.set(
+        'master',
+        'is.null'
+      )
+      openParams.set(
+        'status',
+        'eq.Новый заказ'
+      )
+      openParams.set(
+        'provider_type',
+        `eq.${providerType}`
+      )
+      openParams.set(
+        'order',
+        'created_at.desc'
+      )
 
       if (requestedServiceType) {
+        const serviceType =
+          normalizeServiceType(
+            requestedServiceType
+          )
+
+        assignedParams.set(
+          'service_type',
+          `eq.${serviceType}`
+        )
+
         openParams.set(
           'service_type',
-          `eq.${normalizeServiceType(requestedServiceType)}`
+          `eq.${serviceType}`
         )
       }
 
-      const [assignedResult, openResult] = await Promise.all([
+      const [
+        assignedResult,
+        openResult,
+        rejectedResult,
+      ] = await Promise.all([
         fetchOrders(assignedParams),
         fetchOrders(openParams),
+        fetchRejectedOrderIds(master),
       ])
 
       if (assignedResult.error) {
@@ -409,9 +665,26 @@ export async function GET(request: NextRequest) {
         return openResult.error
       }
 
+      if (rejectedResult.error) {
+        return rejectedResult.error
+      }
+
+      const rejectedIds =
+        rejectedResult.ids ||
+        new Set<string>()
+
+      const availableOpenOrders = (
+        openResult.rows || []
+      ).filter(
+        row =>
+          !rejectedIds.has(
+            String(row.id)
+          )
+      )
+
       const rows = uniqueOrders([
         ...(assignedResult.rows || []),
-        ...(openResult.rows || []),
+        ...availableOpenOrders,
       ])
 
       const orders = rows.map(toShared)
@@ -419,13 +692,17 @@ export async function GET(request: NextRequest) {
       const activeOrder =
         orders.find(
           order =>
-            !completedStatuses.has(order.status) &&
+            !terminalStatuses.has(
+              order.status
+            ) &&
             (
               order.master === master ||
               (
                 !order.master &&
-                order.status === 'Новый заказ' &&
-                order.providerType === providerType
+                order.status ===
+                  'Новый заказ' &&
+                order.providerType ===
+                  providerType
               )
             )
         ) || null
@@ -436,33 +713,40 @@ export async function GET(request: NextRequest) {
           orders,
         },
         {
-          headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-          },
+          headers: noStoreHeaders(),
         }
       )
     }
 
-    /*
-     * История и текущие заказы клиента.
-     */
-    const params = new URLSearchParams()
+    const params =
+      new URLSearchParams()
 
     params.set('select', '*')
-    params.set('order', 'created_at.desc')
+    params.set(
+      'order',
+      'created_at.desc'
+    )
 
     if (client) {
-      params.set('client', `eq.${client}`)
+      params.set(
+        'client',
+        `eq.${client}`
+      )
     }
 
     if (status) {
-      params.set('status', `eq.${status}`)
+      params.set(
+        'status',
+        `eq.${status}`
+      )
     }
 
     if (requestedServiceType) {
       params.set(
         'service_type',
-        `eq.${normalizeServiceType(requestedServiceType)}`
+        `eq.${normalizeServiceType(
+          requestedServiceType
+        )}`
       )
     }
 
@@ -471,21 +755,31 @@ export async function GET(request: NextRequest) {
         'provider_type',
         `eq.${normalizeProviderType(
           requestedProviderType,
-          normalizeServiceType(requestedServiceType)
+          normalizeServiceType(
+            requestedServiceType
+          )
         )}`
       )
     }
 
-    const result = await fetchOrders(params)
+    const result =
+      await fetchOrders(params)
 
     if (result.error) {
       return result.error
     }
 
-    const orders = (result.rows || []).map(toShared)
+    const orders = (
+      result.rows || []
+    ).map(toShared)
 
     const activeOrder =
-      orders.find(order => !completedStatuses.has(order.status)) || null
+      orders.find(
+        order =>
+          !terminalStatuses.has(
+            order.status
+          )
+      ) || null
 
     return NextResponse.json(
       {
@@ -493,76 +787,98 @@ export async function GET(request: NextRequest) {
         orders,
       },
       {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
-        },
+        headers: noStoreHeaders(),
       }
     )
   } catch (error) {
     return errorResponse(
       'Внутренняя ошибка сервера',
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error
+        ? error.message
+        : String(error),
       500
     )
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest
+) {
   try {
     if (!supabaseUrl || !supabaseKey) {
       return configError()
     }
 
-    const body = (await request
-      .json()
-      .catch(() => null)) as Record<string, unknown> | null
+    const body = (
+      await request
+        .json()
+        .catch(() => null)
+    ) as Record<string, unknown> | null
 
     if (!body) {
       return NextResponse.json(
         {
-          error: 'Переданы неправильные данные заказа',
+          error:
+            'Переданы неправильные данные заказа',
         },
         { status: 400 }
       )
     }
 
-    const price = Number(body.price ?? 7000)
+    const price = Number(
+      body.price ?? 7000
+    )
 
-    if (!Number.isFinite(price) || price < 0) {
+    if (
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
       return NextResponse.json(
         {
-          error: 'Неправильно указана стоимость заказа',
+          error:
+            'Неправильно указана стоимость заказа',
         },
         { status: 400 }
       )
     }
 
-    const serviceType = normalizeServiceType(
-      body.service_type ?? body.serviceType
-    )
+    const serviceType =
+      normalizeServiceType(
+        body.service_type ??
+          body.serviceType
+      )
 
-    const providerType = normalizeProviderType(
-      body.provider_type ?? body.providerType,
-      serviceType
-    )
+    const providerType =
+      normalizeProviderType(
+        body.provider_type ??
+          body.providerType,
+        serviceType
+      )
 
     const row = {
       id: crypto.randomUUID(),
       problem: String(
-        body.problem || 'Помощь на дороге'
+        body.problem ||
+          'Помощь на дороге'
       ).trim(),
-      location: String(body.location || 'Астана').trim(),
-      client: String(body.client || 'Ержан Т.').trim(),
+      location: String(
+        body.location || 'Астана'
+      ).trim(),
+      client: String(
+        body.client || 'Ержан Т.'
+      ).trim(),
       vehicle: String(
-        body.vehicle || 'Toyota Prado 120'
+        body.vehicle ||
+          'Toyota Prado 120'
       ).trim(),
       price,
-      status: String(body.status || 'Новый заказ').trim(),
-      master: body.master
-        ? String(body.master).trim()
-        : null,
+      status: 'Новый заказ',
+      master: null,
       service_type: serviceType,
       provider_type: providerType,
+      cancelled_by: null,
+      cancellation_reason: null,
+      cancelled_at: null,
     }
 
     const response = await fetch(
@@ -570,14 +886,16 @@ export async function POST(request: NextRequest) {
       {
         method: 'POST',
         headers: supabaseHeaders({
-          Prefer: 'return=representation',
+          Prefer:
+            'return=representation',
         }),
         body: JSON.stringify(row),
         cache: 'no-store',
       }
     )
 
-    const data = await readJson(response)
+    const data =
+      await readJson(response)
 
     if (!response.ok) {
       return errorResponse(
@@ -588,13 +906,16 @@ export async function POST(request: NextRequest) {
     }
 
     const created = (
-      Array.isArray(data) ? data[0] : data
+      Array.isArray(data)
+        ? data[0]
+        : data
     ) as DbOrder | undefined
 
     if (!created) {
       return NextResponse.json(
         {
-          error: 'Supabase не вернул созданный заказ',
+          error:
+            'Supabase не вернул созданный заказ',
         },
         { status: 500 }
       )
@@ -609,35 +930,45 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return errorResponse(
       'Внутренняя ошибка сервера',
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error
+        ? error.message
+        : String(error),
       500
     )
   }
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest
+) {
   try {
     if (!supabaseUrl || !supabaseKey) {
       return configError()
     }
 
-    const body = (await request
-      .json()
-      .catch(() => null)) as Record<string, unknown> | null
+    const body = (
+      await request
+        .json()
+        .catch(() => null)
+    ) as Record<string, unknown> | null
 
     if (!body) {
       return NextResponse.json(
         {
-          error: 'Переданы неправильные данные заказа',
+          error:
+            'Переданы неправильные данные заказа',
         },
         { status: 400 }
       )
     }
 
-    let id = body.id ? String(body.id) : ''
+    let id = body.id
+      ? String(body.id)
+      : ''
 
     if (!id) {
-      const current = await findCurrentOrderId()
+      const current =
+        await findCurrentOrderId()
 
       if (current.error) {
         return current.error
@@ -655,13 +986,15 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const currentResult = await fetchOrderById(id)
+    const currentResult =
+      await fetchOrderById(id)
 
     if (currentResult.error) {
       return currentResult.error
     }
 
-    const currentOrder = currentResult.order
+    const currentOrder =
+      currentResult.order
 
     if (!currentOrder) {
       return NextResponse.json(
@@ -672,60 +1005,105 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    if (
+      terminalStatuses.has(
+        currentOrder.status
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Завершённый или отменённый заказ нельзя изменить',
+        },
+        { status: 409 }
+      )
+    }
+
     const patch: OrderPatch = {}
 
     if (body.status !== undefined) {
-      patch.status = String(body.status).trim()
+      const nextStatus =
+        normalizeStatus(body.status)
+
+      if (!nextStatus) {
+        return NextResponse.json(
+          {
+            error:
+              'Неизвестный статус заказа',
+          },
+          { status: 400 }
+        )
+      }
+
+      if (
+        !canChangeStatus(
+          currentOrder.status,
+          nextStatus
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Нельзя перейти к этому статусу',
+            details: {
+              currentStatus:
+                currentOrder.status,
+              requestedStatus:
+                nextStatus,
+              allowedStatuses:
+                statusTransitions[
+                  currentOrder.status
+                ],
+            },
+          },
+          { status: 409 }
+        )
+      }
+
+      patch.status = nextStatus
     }
 
     if (body.problem !== undefined) {
-      patch.problem = String(body.problem).trim()
+      patch.problem = String(
+        body.problem
+      ).trim()
     }
 
     if (body.location !== undefined) {
-      patch.location = String(body.location).trim()
+      patch.location = String(
+        body.location
+      ).trim()
     }
 
     if (body.client !== undefined) {
-      patch.client = String(body.client).trim()
+      patch.client = String(
+        body.client
+      ).trim()
     }
 
     if (body.vehicle !== undefined) {
-      patch.vehicle = String(body.vehicle).trim()
+      patch.vehicle = String(
+        body.vehicle
+      ).trim()
     }
 
     if (body.price !== undefined) {
       const price = Number(body.price)
 
-      if (!Number.isFinite(price) || price < 0) {
+      if (
+        !Number.isFinite(price) ||
+        price < 0
+      ) {
         return NextResponse.json(
           {
-            error: 'Неправильно указана стоимость заказа',
+            error:
+              'Неправильно указана стоимость заказа',
           },
           { status: 400 }
         )
       }
 
       patch.price = price
-    }
-
-    if (
-      body.service_type !== undefined ||
-      body.serviceType !== undefined
-    ) {
-      patch.service_type = normalizeServiceType(
-        body.service_type ?? body.serviceType
-      )
-    }
-
-    if (
-      body.provider_type !== undefined ||
-      body.providerType !== undefined
-    ) {
-      patch.provider_type = normalizeProviderType(
-        body.provider_type ?? body.providerType,
-        patch.service_type || currentOrder.service_type
-      )
     }
 
     const requestedMaster =
@@ -739,31 +1117,38 @@ export async function PATCH(request: NextRequest) {
       if (
         currentOrder.master &&
         requestedMaster &&
-        currentOrder.master !== requestedMaster
+        currentOrder.master !==
+          requestedMaster
       ) {
         return NextResponse.json(
           {
-            error: 'Заказ уже принят другим исполнителем',
+            error:
+              'Заказ уже принят другим исполнителем',
           },
           { status: 409 }
         )
       }
 
-      const requestedProviderType = normalizeProviderType(
-        body.provider_type ?? body.providerType ?? 'master',
-        currentOrder.service_type
-      )
+      const requestedProviderType =
+        normalizeProviderType(
+          body.provider_type ??
+            body.providerType ??
+            currentOrder.provider_type,
+          currentOrder.service_type
+        )
 
       if (
         requestedMaster &&
-        !currentOrder.master &&
-        requestedProviderType !== currentOrder.provider_type
+        requestedProviderType !==
+          currentOrder.provider_type
       ) {
         return NextResponse.json(
           {
-            error: 'Этот заказ предназначен другому типу исполнителя',
+            error:
+              'Этот заказ предназначен другому типу исполнителя',
             details: {
-              orderProviderType: currentOrder.provider_type,
+              orderProviderType:
+                currentOrder.provider_type,
               requestedProviderType,
             },
           },
@@ -771,40 +1156,100 @@ export async function PATCH(request: NextRequest) {
         )
       }
 
+      if (
+        requestedMaster &&
+        currentOrder.status !==
+          'Новый заказ'
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Принять можно только новый заказ',
+          },
+          { status: 409 }
+        )
+      }
+
       patch.master = requestedMaster
     }
 
-    if (Object.keys(patch).length === 0) {
+    if (
+      patch.status ===
+        'Мастер принял заказ' &&
+      !requestedMaster &&
+      !currentOrder.master
+    ) {
       return NextResponse.json(
         {
-          error: 'Нет данных для изменения заказа',
+          error:
+            'При принятии заказа необходимо указать исполнителя',
         },
         { status: 400 }
       )
     }
 
-    const params = new URLSearchParams()
+    if (
+      patch.status &&
+      patch.status !==
+        'Мастер принял заказ' &&
+      !currentOrder.master &&
+      !requestedMaster
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Сначала исполнитель должен принять заказ',
+        },
+        { status: 409 }
+      )
+    }
+
+    if (
+      Object.keys(patch).length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Нет данных для изменения заказа',
+        },
+        { status: 400 }
+      )
+    }
+
+    const params =
+      new URLSearchParams()
 
     params.set('id', `eq.${id}`)
 
-    /*
-     * При первом принятии добавляется условие master IS NULL.
-     * Благодаря этому два исполнителя не смогут одновременно принять заказ.
-     */
-    if (requestedMaster && !currentOrder.master) {
-      params.set('master', 'is.null')
+    if (
+      requestedMaster &&
+      !currentOrder.master
+    ) {
+      params.set(
+        'master',
+        'is.null'
+      )
+      params.set(
+        'status',
+        'eq.Новый заказ'
+      )
     }
 
-    const response = await fetch(buildOrdersUrl(params), {
-      method: 'PATCH',
-      headers: supabaseHeaders({
-        Prefer: 'return=representation',
-      }),
-      body: JSON.stringify(patch),
-      cache: 'no-store',
-    })
+    const response = await fetch(
+      buildOrdersUrl(params),
+      {
+        method: 'PATCH',
+        headers: supabaseHeaders({
+          Prefer:
+            'return=representation',
+        }),
+        body: JSON.stringify(patch),
+        cache: 'no-store',
+      }
+    )
 
-    const data = await readJson(response)
+    const data =
+      await readJson(response)
 
     if (!response.ok) {
       return errorResponse(
@@ -815,7 +1260,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updated = (
-      Array.isArray(data) ? data[0] : data
+      Array.isArray(data)
+        ? data[0]
+        : data
     ) as DbOrder | undefined
 
     if (!updated) {
@@ -834,30 +1281,39 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     return errorResponse(
       'Внутренняя ошибка сервера',
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error
+        ? error.message
+        : String(error),
       500
     )
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: NextRequest
+) {
   try {
     if (!supabaseUrl || !supabaseKey) {
       return configError()
     }
 
-    const body = (await request
-      .json()
-      .catch(() => ({}))) as Record<string, unknown>
+    const body = (
+      await request
+        .json()
+        .catch(() => ({}))
+    ) as Record<string, unknown>
 
     let id = String(
       body.id ||
-        request.nextUrl.searchParams.get('id') ||
+        request.nextUrl.searchParams.get(
+          'id'
+        ) ||
         ''
     )
 
     if (!id) {
-      const current = await findCurrentOrderId()
+      const current =
+        await findCurrentOrderId()
 
       if (current.error) {
         return current.error
@@ -875,22 +1331,133 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const params = new URLSearchParams()
+    const currentResult =
+      await fetchOrderById(id)
+
+    if (currentResult.error) {
+      return currentResult.error
+    }
+
+    const order =
+      currentResult.order
+
+    if (!order) {
+      return NextResponse.json(
+        {
+          error: 'Заказ не найден',
+        },
+        { status: 404 }
+      )
+    }
+
+    if (
+      terminalStatuses.has(
+        order.status
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Заказ уже завершён или отменён',
+        },
+        { status: 409 }
+      )
+    }
+
+    const actor = String(
+      body.actor ||
+        request.nextUrl.searchParams.get(
+          'actor'
+        ) ||
+        ''
+    ).trim()
+
+    const providerName = String(
+      body.providerName ||
+        body.provider_name ||
+        request.nextUrl.searchParams.get(
+          'providerName'
+        ) ||
+        order.master ||
+        'Айбек Нурланов'
+    ).trim()
+
+    const reason = String(
+      body.reason ||
+        request.nextUrl.searchParams.get(
+          'reason'
+        ) ||
+        'Причина не указана'
+    ).trim()
+
+    /*
+     * Свободный новый заказ:
+     * отказ исполнителя не отменяет заявку.
+     */
+    if (
+      order.status ===
+        'Новый заказ' &&
+      !order.master &&
+      actor !== 'client'
+    ) {
+      const rejectionError =
+        await createRejection(
+          order.id,
+          providerName,
+          order.provider_type
+        )
+
+      if (rejectionError) {
+        return rejectionError
+      }
+
+      return NextResponse.json({
+        rejected: true,
+        order: toShared(order),
+        message:
+          'Заказ скрыт для этого исполнителя и остаётся доступным другим.',
+      })
+    }
+
+    /*
+     * Водитель или уже назначенный исполнитель
+     * отменяет весь заказ.
+     */
+    const cancelledBy =
+      actor === 'provider'
+        ? 'provider'
+        : actor === 'client'
+          ? 'client'
+          : order.master
+            ? 'provider'
+            : 'client'
+
+    const params =
+      new URLSearchParams()
 
     params.set('id', `eq.${id}`)
 
-    const response = await fetch(buildOrdersUrl(params), {
-      method: 'PATCH',
-      headers: supabaseHeaders({
-        Prefer: 'return=representation',
-      }),
-      body: JSON.stringify({
-        status: 'Отменён',
-      }),
-      cache: 'no-store',
-    })
+    const response = await fetch(
+      buildOrdersUrl(params),
+      {
+        method: 'PATCH',
+        headers: supabaseHeaders({
+          Prefer:
+            'return=representation',
+        }),
+        body: JSON.stringify({
+          status: 'Отменён',
+          cancelled_by: cancelledBy,
+          cancellation_reason: reason,
+          cancelled_at:
+            new Date().toISOString(),
+        }),
+        cache: 'no-store',
+      }
+    )
 
-    const data = await readJson(response)
+    const data =
+      await readJson(response)
 
     if (!response.ok) {
       return errorResponse(
@@ -901,7 +1468,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     const cancelled = (
-      Array.isArray(data) ? data[0] : data
+      Array.isArray(data)
+        ? data[0]
+        : data
     ) as DbOrder | undefined
 
     if (!cancelled) {
@@ -914,12 +1483,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({
+      cancelled: true,
       order: toShared(cancelled),
     })
   } catch (error) {
     return errorResponse(
       'Внутренняя ошибка сервера',
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error
+        ? error.message
+        : String(error),
       500
     )
   }
