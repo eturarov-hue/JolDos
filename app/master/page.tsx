@@ -4,6 +4,11 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage, type Lang } from '@/lib/i18n'
+import {
+  DEFAULT_TEST_MASTER,
+  getTestMaster,
+  type TestMaster,
+} from '@/lib/test-masters'
 
 type SharedOrder = {
   id: string
@@ -19,39 +24,6 @@ type SharedOrder = {
 
 type Tab = 'home' | 'orders' | 'earnings' | 'profile'
 
-type TestMaster = {
-  id: string
-  name: string
-  role: 'master'
-  providerType: string
-  initials: string
-}
-
-const TEST_MASTERS: Record<string, TestMaster> = {
-  master_aibek: {
-    id: 'master_aibek',
-    name: 'Айбек',
-    role: 'master',
-    providerType: 'master',
-    initials: 'А',
-  },
-  master_nurlan: {
-    id: 'master_nurlan',
-    name: 'Нурлан',
-    role: 'master',
-    providerType: 'master',
-    initials: 'Н',
-  },
-  master_sanzhar: {
-    id: 'master_sanzhar',
-    name: 'Санжар',
-    role: 'master',
-    providerType: 'master',
-    initials: 'С',
-  },
-}
-
-const DEFAULT_MASTER = TEST_MASTERS.master_aibek
 
 const copy = {
   cabinet: {
@@ -390,7 +362,7 @@ export default function Master() {
     lang === 'kk' ? 'kk-KZ' : lang === 'en' ? 'en-US' : 'ru-RU'
 
   const [currentMaster, setCurrentMaster] =
-    useState<TestMaster>(DEFAULT_MASTER)
+    useState<TestMaster>(DEFAULT_TEST_MASTER)
 
   const [identityReady, setIdentityReady] = useState(false)
   const [tab, setTab] = useState<Tab>('home')
@@ -463,7 +435,7 @@ export default function Master() {
       const raw = localStorage.getItem('joldos-test-user')
 
       if (!raw) {
-        setCurrentMaster(DEFAULT_MASTER)
+        setCurrentMaster(DEFAULT_TEST_MASTER)
         setIdentityReady(true)
         return
       }
@@ -475,17 +447,13 @@ export default function Master() {
         providerType?: string
       }
 
-      if (
-        saved.role === 'master' &&
-        saved.id &&
-        TEST_MASTERS[saved.id]
-      ) {
-        setCurrentMaster(TEST_MASTERS[saved.id])
+      if (saved.role === 'master' && saved.id) {
+        setCurrentMaster(getTestMaster(saved.id))
       } else {
-        setCurrentMaster(DEFAULT_MASTER)
+        setCurrentMaster(DEFAULT_TEST_MASTER)
       }
     } catch {
-      setCurrentMaster(DEFAULT_MASTER)
+      setCurrentMaster(DEFAULT_TEST_MASTER)
     } finally {
       setIdentityReady(true)
     }
@@ -904,7 +872,8 @@ export default function Master() {
                       <small>{tx('today')}</small>
                       <h1>{greeting()}</h1>
                       <p>
-                        {online ? tx('nearby') : tx('goOnline')}
+                        {currentMaster.title[lang]}
+                        {online ? ` · ${tx('nearby')}` : ''}
                       </p>
                     </div>
 
@@ -1089,6 +1058,7 @@ export default function Master() {
                     </div>
 
                     <h1>{currentMaster.name}</h1>
+                    <small>{currentMaster.title[lang]}</small>
 
                     <p>{tx('verified')} ✓</p>
 
@@ -1103,32 +1073,11 @@ export default function Master() {
                   <h2>{tx('specialties')}</h2>
 
                   <div className="specialty-list">
-                    <span>
-                      ⚡{' '}
-                      {lang === 'kk'
-                        ? 'Автоэлектрик'
-                        : lang === 'en'
-                          ? 'Auto electrician'
-                          : 'Автоэлектрик'}
-                    </span>
-
-                    <span>
-                      🔧{' '}
-                      {lang === 'kk'
-                        ? 'Көшпелі механик'
-                        : lang === 'en'
-                          ? 'Mobile mechanic'
-                          : 'Выездной механик'}
-                    </span>
-
-                    <span>
-                      🔋{' '}
-                      {lang === 'kk'
-                        ? 'Аккумулятор қызметі'
-                        : lang === 'en'
-                          ? 'Battery service'
-                          : 'Аккумулятор'}
-                    </span>
+                    {currentMaster.specialties.map((specialty) => (
+                      <span key={`${currentMaster.id}-${specialty.ru}`}>
+                        {specialty.icon} {specialty[lang]}
+                      </span>
+                    ))}
                   </div>
 
                   <h2>{tx('stats')}</h2>
