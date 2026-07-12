@@ -113,7 +113,21 @@ export default function Home(){
           serviceType:item.serviceType,
           providerType:item.providerType
         }))
-        setOrders(apiOrders)
+        setOrders(prev=>{
+          const merged=new Map<string,ClientOrder>()
+
+          for(const order of prev){
+            merged.set(order.id,order)
+          }
+
+          for(const order of apiOrders){
+            merged.set(order.id,order)
+          }
+
+          return Array.from(merged.values()).sort(
+            (a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()
+          )
+        })
         const active=apiOrders.find(item=>isActiveOrderStatus(item.status))
         if(active){
           setActiveOrderId(active.id)
@@ -147,7 +161,36 @@ export default function Home(){
           return
         }
         const updatedStatus=String(data.order.status)
-        setOrders(prev=>prev.map(o=>o.id===activeOrderId?{...o,master:data.order.master||tx('searchingMaster'),status:data.order.status}:o))
+        setOrders(prev=>{
+          const updatedOrder:ClientOrder={
+            id:data.order.id,
+            master:data.order.master||tx('searchingMaster'),
+            problem:data.order.problem,
+            location:data.order.location,
+            createdAt:new Date(data.order.createdAt).toLocaleString(locale),
+            status:data.order.status,
+            serviceType:data.order.serviceType,
+            providerType:data.order.providerType,
+          }
+
+          const exists=prev.some(o=>o.id===activeOrderId)
+
+          if(!exists){
+            return [updatedOrder,...prev]
+          }
+
+          return prev.map(o=>
+            o.id===activeOrderId
+              ? {...o,...updatedOrder}
+              : o
+          )
+        })
+
+        if(updatedStatus!=='Отменён'){
+          setStage('active')
+          setTab('home')
+        }
+
         if(updatedStatus==='Отменён'){
           setActiveOrderId('')
           setStage('start')
@@ -226,8 +269,14 @@ export default function Home(){
       const data=await response.json()
       if(!response.ok||!data.order) throw new Error(data.error||'Create order failed')
       const order:ClientOrder={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date(data.order.createdAt).toLocaleString(locale),status:data.order.status,serviceType:data.order.serviceType,providerType:data.order.providerType}
-      setOrders(prev=>[order,...prev]); setActiveOrderId(order.id); setStage('active'); notify(tx('requestSent'))
-    }catch{ notify(tx('requestFailed')) }
+      setOrders(prev=>[order,...prev.filter(item=>item.id!==order.id)])
+      setActiveOrderId(order.id)
+      setStage('active')
+      setTab('home')
+      notify(tx('requestSent'))
+    }catch(error){
+      notify(tx('requestFailed'))
+    }
   }
   async function cancelActiveOrder(){
     if(!activeOrder)return
