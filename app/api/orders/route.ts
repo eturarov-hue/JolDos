@@ -28,6 +28,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '')
 
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 function configError() {
@@ -35,7 +36,7 @@ function configError() {
     {
       error: 'Supabase не настроен',
       details:
-        'Добавьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY либо NEXT_PUBLIC_SUPABASE_ANON_KEY.',
+        'Добавьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY.',
     },
     { status: 500 }
   )
@@ -164,7 +165,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (master) {
-      params.set('master', `eq.${master}`)
+      params.set(
+        'or',
+        `(master.eq.${master},and(master.is.null,status.eq.Новый заказ))`
+      )
     }
 
     if (status) {
@@ -190,16 +194,33 @@ export async function GET(request: NextRequest) {
     const rows = (Array.isArray(data) ? data : []) as DbOrder[]
     const orders = rows.map(toShared)
 
-    const activeOrder =
-      orders.find(
-        order =>
-          order.status !== 'Завершён' &&
-          order.status !== 'Отменён'
-      ) || null
+    let activeOrder: SharedOrder | null = null
+
+    if (id) {
+      activeOrder = orders[0] || null
+    } else if (master) {
+      activeOrder =
+        orders.find(
+          order =>
+            order.status !== 'Завершён' &&
+            order.status !== 'Отменён' &&
+            (
+              order.master === master ||
+              (!order.master && order.status === 'Новый заказ')
+            )
+        ) || null
+    } else {
+      activeOrder =
+        orders.find(
+          order =>
+            order.status !== 'Завершён' &&
+            order.status !== 'Отменён'
+        ) || null
+    }
 
     return NextResponse.json(
       {
-        order: id ? orders[0] || null : activeOrder,
+        order: activeOrder,
         orders,
       },
       {
