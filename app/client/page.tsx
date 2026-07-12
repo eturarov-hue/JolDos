@@ -210,7 +210,7 @@ export default function Home(){
       const response=await fetch(`/api/orders?${params.toString()}`,{method:'DELETE'})
       const data=await response.json().catch(()=>null)
       if(!response.ok)throw new Error(data?.error||'Cancel order failed')
-      setOrders(prev=>prev.map(o=>o.id===activeOrder.id?{...o,status:'Отменён'}:o))
+      setOrders(prev=>prev.map(o=>o.id===activeOrder.id?{...o,status:'Отменён' as Order['status']}:o))
       setActiveOrderId('')
       setStage('start')
       setTab('home')
