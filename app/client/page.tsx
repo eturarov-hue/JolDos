@@ -10,6 +10,30 @@ import { useLanguage } from '@/lib/i18n'
 import { getMasters, getProblems, getStations, statusSteps, statusText } from '@/lib/mock-data'
 import type { Order, Stage, Tab } from '@/types'
 
+type ServiceType = 'road_assistance' | 'tow_truck' | 'battery' | 'tire_service' | 'fuel_delivery' | 'car_unlock' | 'car_wash' | 'service_station'
+type ProviderType = 'master' | 'tow_truck' | 'electrician' | 'tire_service' | 'fuel_delivery' | 'locksmith' | 'car_wash' | 'service_station'
+type ClientOrder = Order & { serviceType?: ServiceType; providerType?: ProviderType }
+type ServiceRoute = { problemId: string; serviceType: ServiceType; providerType: ProviderType }
+
+const serviceRoutes: Record<string, ServiceRoute> = {
+  tow: { problemId: 'tow', serviceType: 'tow_truck', providerType: 'tow_truck' },
+  battery: { problemId: 'start', serviceType: 'battery', providerType: 'electrician' },
+  wheel: { problemId: 'wheel', serviceType: 'tire_service', providerType: 'tire_service' },
+  fuel: { problemId: 'fuel', serviceType: 'fuel_delivery', providerType: 'fuel_delivery' },
+  unlock: { problemId: 'other', serviceType: 'car_unlock', providerType: 'locksmith' },
+  repair: { problemId: 'other', serviceType: 'road_assistance', providerType: 'master' },
+  wash: { problemId: 'other', serviceType: 'car_wash', providerType: 'car_wash' },
+  station: { problemId: 'other', serviceType: 'service_station', providerType: 'service_station' },
+}
+
+function routeForProblem(problemId: string): ServiceRoute {
+  if (problemId === 'tow') return serviceRoutes.tow
+  if (problemId === 'start') return serviceRoutes.battery
+  if (problemId === 'wheel') return serviceRoutes.wheel
+  if (problemId === 'fuel') return serviceRoutes.fuel
+  return serviceRoutes.repair
+}
+
 export default function Home(){
   const {lang,setLang}=useLanguage()
   const ui={
@@ -34,11 +58,13 @@ export default function Home(){
   const [tab,setTab]=useState<Tab>('home')
   const [stage,setStage]=useState<Stage>('start')
   const [selected,setSelected]=useState('')
+  const [serviceType,setServiceType]=useState<ServiceType>('road_assistance')
+  const [providerType,setProviderType]=useState<ProviderType>('master')
   const [locationText,setLocationText]=useState<string>(tx('astanaCurrent'))
   const [geoLoading,setGeoLoading]=useState(false)
   const [activeMaster,setActiveMaster]=useState(0)
   const [toast,setToast]=useState('')
-  const [orders,setOrders]=useState<Order[]>([])
+  const [orders,setOrders]=useState<ClientOrder[]>([])
   const [activeOrderId,setActiveOrderId]=useState('')
   const [rating,setRating]=useState(0)
   const [coords,setCoords]=useState<[number,number]>([51.1282,71.4304])
@@ -60,13 +86,15 @@ export default function Home(){
         const response=await fetch(`/api/orders?client=${encodeURIComponent('Ержан Т.')}`,{cache:'no-store'})
         const data=await response.json()
         if(!Array.isArray(data.orders)) return
-        const apiOrders:Order[]=data.orders.map((item:any)=>({
+        const apiOrders:ClientOrder[]=data.orders.map((item:any)=>({
           id:item.id,
           master:item.master||tx('searchingMaster'),
           problem:item.problem,
           location:item.location,
           createdAt:new Date(item.createdAt).toLocaleString(locale),
-          status:item.status
+          status:item.status,
+          serviceType:item.serviceType,
+          providerType:item.providerType
         }))
         setOrders(apiOrders)
         const active = apiOrders.find((item: any) => {
@@ -97,25 +125,25 @@ export default function Home(){
 
   function notify(text:string){ setToast(text); window.setTimeout(()=>setToast(''),2300) }
   function vibrate(){ if('vibrate' in navigator) navigator.vibrate(25) }
-  function goHome(){ setTab('home'); setStage('start'); setSelected(''); setActiveMaster(0); setActiveOrderId(''); setRating(0) }
-  function chooseProblem(id:string){ vibrate(); setSelected(id) }
-  function findHelp(problemId?:string){
+  function goHome(){ setTab('home'); setStage('start'); setSelected(''); setServiceType('road_assistance'); setProviderType('master'); setActiveMaster(0); setActiveOrderId(''); setRating(0) }
+  function chooseProblem(id:string){ vibrate(); const route=routeForProblem(id); setSelected(id); setServiceType(route.serviceType); setProviderType(route.providerType) }
+  function findHelp(problemId?:string, route?:ServiceRoute){
     const nextProblem=problemId||selected
     if(!nextProblem){ notify(tx('firstChoose')); return }
+    const nextRoute=route||routeForProblem(nextProblem)
     vibrate()
     setSelected(nextProblem)
+    setServiceType(nextRoute.serviceType)
+    setProviderType(nextRoute.providerType)
     setTab('home')
     setStage('searching')
     window.setTimeout(()=>setStage('result'),1500)
   }
   function openService(serviceId:string){
-    const problemMap:Record<string,string>={
-      tow:'tow', battery:'start', wheel:'wheel', fuel:'fuel',
-      unlock:'other', repair:'other', wash:'other'
-    }
+    const route=serviceRoutes[serviceId]
+    if(!route) return
     if(serviceId==='station'){ setTab('sto'); return }
-    const problemId=problemMap[serviceId]
-    if(problemId) findHelp(problemId)
+    findHelp(route.problemId,route)
   }
   function useLocation(){
     if(!navigator.geolocation){ notify(tx('geoUnsupported')); return }
@@ -129,10 +157,10 @@ export default function Home(){
   }
   async function createOrder(){
     try{
-      const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problem:problem?.title||tx('helpRoad'),location:locationText,client:'Ержан Т.',vehicle:'Toyota Prado 120',price:7000})})
+      const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problem:problem?.title||tx('helpRoad'),location:locationText,client:'Ержан Т.',vehicle:'Toyota Prado 120',price:7000,serviceType,providerType})})
       const data=await response.json()
       if(!response.ok||!data.order) throw new Error(data.error||'Create order failed')
-      const order:Order={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date(data.order.createdAt).toLocaleString(locale),status:data.order.status}
+      const order:ClientOrder={id:data.order.id,master:tx('searchingMaster'),problem:data.order.problem,location:data.order.location,createdAt:new Date(data.order.createdAt).toLocaleString(locale),status:data.order.status,serviceType:data.order.serviceType,providerType:data.order.providerType}
       setOrders(prev=>[order,...prev]); setActiveOrderId(order.id); setStage('active'); notify(tx('requestSent'))
     }catch{ notify(tx('requestFailed')) }
   }
