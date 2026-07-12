@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 type Lang = 'ru' | 'kk' | 'en'
 
 type CarProfile = {
+  id: string
   make: string
   model: string
   year: string
@@ -15,10 +16,12 @@ type CarProfile = {
   engine: string
   transmission: string
   fuel: string
+  createdAt: string
 }
 
 type ServiceRecord = {
   id: string
+  carId: string
   date: string
   mileage: string
   category: string
@@ -27,10 +30,11 @@ type ServiceRecord = {
   notes: string
 }
 
-const CAR_KEY = 'joldos-car-profile-v1'
-const HISTORY_KEY = 'joldos-car-history-v1'
+const CARS_KEY = 'joldos-cars-v2'
+const HISTORY_KEY = 'joldos-car-history-v2'
+const ACTIVE_CAR_KEY = 'joldos-active-car-v2'
 
-const emptyCar:CarProfile = {
+const emptyCar = {
   make:'',
   model:'',
   year:'',
@@ -53,24 +57,25 @@ const emptyRecord = {
 
 export default function CarPage(){
   const [lang,setLang]=useState<Lang>('ru')
-  const [car,setCar]=useState<CarProfile>(emptyCar)
+  const [cars,setCars]=useState<CarProfile[]>([])
   const [records,setRecords]=useState<ServiceRecord[]>([])
-  const [editing,setEditing]=useState(true)
+  const [activeCarId,setActiveCarId]=useState('')
+  const [showCarForm,setShowCarForm]=useState(false)
+  const [editingCarId,setEditingCarId]=useState('')
+  const [carForm,setCarForm]=useState(emptyCar)
   const [showRecordForm,setShowRecordForm]=useState(false)
-  const [record,setRecord]=useState(emptyRecord)
+  const [recordForm,setRecordForm]=useState(emptyRecord)
   const [message,setMessage]=useState('')
 
   const t={
     ru:{
-      title:'Мой автомобиль',
+      title:'Мои автомобили',
       subtitle:'Цифровая история автомобиля',
       back:'Назад',
+      addCar:'Добавить автомобиль',
       edit:'Редактировать',
-      save:'Сохранить автомобиль',
-      add:'Добавить обслуживание',
-      history:'История обслуживания',
-      empty:'История пока пуста',
-      emptyDesc:'Добавьте первую запись об обслуживании или ремонте.',
+      saveCar:'Сохранить автомобиль',
+      cancel:'Отмена',
       make:'Марка',
       model:'Модель',
       year:'Год',
@@ -80,12 +85,17 @@ export default function CarPage(){
       engine:'Двигатель',
       transmission:'Коробка',
       fuel:'Топливо',
+      noCars:'Автомобилей пока нет',
+      noCarsDesc:'Добавьте первый автомобиль, чтобы вести историю обслуживания.',
+      history:'История обслуживания',
+      addRecord:'Добавить обслуживание',
+      emptyHistory:'История пока пуста',
+      emptyHistoryDesc:'Добавьте первую запись об обслуживании или ремонте.',
       date:'Дата',
       category:'Категория',
       description:'Что сделали',
       cost:'Стоимость, ₸',
       notes:'Комментарий',
-      cancel:'Отмена',
       saveRecord:'Сохранить запись',
       saved:'Автомобиль сохранён',
       recordSaved:'Запись добавлена',
@@ -93,17 +103,18 @@ export default function CarPage(){
       recordRequired:'Укажите дату и выполненную работу',
       total:'Всего расходов',
       delete:'Удалить',
+      deleteCar:'Удалить автомобиль',
+      selectCar:'Открыть',
+      cardTitle:'Паспорт автомобиля',
     },
     kk:{
-      title:'Менің көлігім',
+      title:'Менің көліктерім',
       subtitle:'Көліктің цифрлық тарихы',
       back:'Артқа',
+      addCar:'Көлік қосу',
       edit:'Өзгерту',
-      save:'Көлікті сақтау',
-      add:'Қызмет көрсетуді қосу',
-      history:'Қызмет көрсету тарихы',
-      empty:'Тарих әзірге бос',
-      emptyDesc:'Алғашқы қызмет көрсету немесе жөндеу жазбасын қосыңыз.',
+      saveCar:'Көлікті сақтау',
+      cancel:'Бас тарту',
       make:'Марка',
       model:'Модель',
       year:'Жыл',
@@ -113,12 +124,17 @@ export default function CarPage(){
       engine:'Қозғалтқыш',
       transmission:'Беріліс қорабы',
       fuel:'Отын',
+      noCars:'Көлік әлі қосылмаған',
+      noCarsDesc:'Қызмет көрсету тарихын жүргізу үшін алғашқы көлікті қосыңыз.',
+      history:'Қызмет көрсету тарихы',
+      addRecord:'Қызмет көрсетуді қосу',
+      emptyHistory:'Тарих әзірге бос',
+      emptyHistoryDesc:'Алғашқы қызмет көрсету немесе жөндеу жазбасын қосыңыз.',
       date:'Күні',
       category:'Санат',
       description:'Не жасалды',
       cost:'Құны, ₸',
       notes:'Түсініктеме',
-      cancel:'Бас тарту',
       saveRecord:'Жазбаны сақтау',
       saved:'Көлік сақталды',
       recordSaved:'Жазба қосылды',
@@ -126,17 +142,18 @@ export default function CarPage(){
       recordRequired:'Күні мен орындалған жұмысты көрсетіңіз',
       total:'Жалпы шығын',
       delete:'Жою',
+      deleteCar:'Көлікті жою',
+      selectCar:'Ашу',
+      cardTitle:'Көлік паспорты',
     },
     en:{
-      title:'My vehicle',
+      title:'My vehicles',
       subtitle:'Digital vehicle history',
       back:'Back',
+      addCar:'Add vehicle',
       edit:'Edit',
-      save:'Save vehicle',
-      add:'Add service record',
-      history:'Service history',
-      empty:'History is empty',
-      emptyDesc:'Add the first maintenance or repair record.',
+      saveCar:'Save vehicle',
+      cancel:'Cancel',
       make:'Make',
       model:'Model',
       year:'Year',
@@ -146,12 +163,17 @@ export default function CarPage(){
       engine:'Engine',
       transmission:'Transmission',
       fuel:'Fuel',
+      noCars:'No vehicles yet',
+      noCarsDesc:'Add your first vehicle to start tracking service history.',
+      history:'Service history',
+      addRecord:'Add service record',
+      emptyHistory:'History is empty',
+      emptyHistoryDesc:'Add the first maintenance or repair record.',
       date:'Date',
       category:'Category',
       description:'Work performed',
       cost:'Cost, ₸',
       notes:'Notes',
-      cancel:'Cancel',
       saveRecord:'Save record',
       saved:'Vehicle saved',
       recordSaved:'Record added',
@@ -159,6 +181,9 @@ export default function CarPage(){
       recordRequired:'Enter date and work performed',
       total:'Total expenses',
       delete:'Delete',
+      deleteCar:'Delete vehicle',
+      selectCar:'Open',
+      cardTitle:'Vehicle passport',
     },
   } as const
 
@@ -166,72 +191,164 @@ export default function CarPage(){
 
   useEffect(()=>{
     try{
-      const savedCar=localStorage.getItem(CAR_KEY)
+      const savedCars=localStorage.getItem(CARS_KEY)
       const savedHistory=localStorage.getItem(HISTORY_KEY)
+      const savedActive=localStorage.getItem(ACTIVE_CAR_KEY)
 
-      if(savedCar){
-        const parsed=JSON.parse(savedCar) as CarProfile
-        setCar(parsed)
-        setEditing(false)
-      }
+      const parsedCars=savedCars ? JSON.parse(savedCars) as CarProfile[] : []
+      const parsedHistory=savedHistory ? JSON.parse(savedHistory) as ServiceRecord[] : []
 
-      if(savedHistory){
-        setRecords(JSON.parse(savedHistory) as ServiceRecord[])
-      }
+      setCars(parsedCars)
+      setRecords(parsedHistory)
+
+      const initialActive=
+        savedActive && parsedCars.some(car=>car.id===savedActive)
+          ? savedActive
+          : parsedCars[0]?.id || ''
+
+      setActiveCarId(initialActive)
     }catch{}
   },[])
+
+  const activeCar=useMemo(
+    ()=>cars.find(car=>car.id===activeCarId) || null,
+    [cars,activeCarId],
+  )
+
+  const activeRecords=useMemo(
+    ()=>records
+      .filter(record=>record.carId===activeCarId)
+      .sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()),
+    [records,activeCarId],
+  )
+
+  const total=useMemo(
+    ()=>activeRecords.reduce((sum,item)=>sum+(Number(item.cost)||0),0),
+    [activeRecords],
+  )
 
   function notify(text:string){
     setMessage(text)
     window.setTimeout(()=>setMessage(''),2200)
   }
 
+  function persistCars(next:CarProfile[]){
+    setCars(next)
+    localStorage.setItem(CARS_KEY,JSON.stringify(next))
+  }
+
+  function persistRecords(next:ServiceRecord[]){
+    setRecords(next)
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(next))
+  }
+
+  function selectCar(id:string){
+    setActiveCarId(id)
+    localStorage.setItem(ACTIVE_CAR_KEY,id)
+    setShowCarForm(false)
+    setEditingCarId('')
+    setShowRecordForm(false)
+  }
+
+  function openNewCar(){
+    setCarForm(emptyCar)
+    setEditingCarId('')
+    setShowCarForm(true)
+  }
+
+  function editCar(car:CarProfile){
+    setCarForm({
+      make:car.make,
+      model:car.model,
+      year:car.year,
+      plate:car.plate,
+      vin:car.vin,
+      mileage:car.mileage,
+      engine:car.engine,
+      transmission:car.transmission,
+      fuel:car.fuel,
+    })
+    setEditingCarId(car.id)
+    setShowCarForm(true)
+  }
+
   function saveCar(event:FormEvent){
     event.preventDefault()
 
-    if(!car.make.trim()||!car.model.trim()||!car.year.trim()){
+    if(!carForm.make.trim()||!carForm.model.trim()||!carForm.year.trim()){
       notify(tx.required)
       return
     }
 
-    localStorage.setItem(CAR_KEY,JSON.stringify(car))
-    setEditing(false)
+    let next:CarProfile[]
+    let savedId=editingCarId
+
+    if(editingCarId){
+      next=cars.map(car=>
+        car.id===editingCarId
+          ? {...car,...carForm}
+          : car
+      )
+    }else{
+      savedId=crypto.randomUUID()
+      next=[
+        ...cars,
+        {
+          id:savedId,
+          ...carForm,
+          createdAt:new Date().toISOString(),
+        },
+      ]
+    }
+
+    persistCars(next)
+    selectCar(savedId)
+    setShowCarForm(false)
+    setEditingCarId('')
     notify(tx.saved)
+  }
+
+  function deleteCar(id:string){
+    if(!window.confirm(tx.deleteCar+'?')) return
+
+    const nextCars=cars.filter(car=>car.id!==id)
+    const nextRecords=records.filter(record=>record.carId!==id)
+
+    persistCars(nextCars)
+    persistRecords(nextRecords)
+
+    const nextActive=nextCars[0]?.id || ''
+    setActiveCarId(nextActive)
+    localStorage.setItem(ACTIVE_CAR_KEY,nextActive)
   }
 
   function addRecord(event:FormEvent){
     event.preventDefault()
 
-    if(!record.date||!record.description.trim()){
+    if(!activeCarId||!recordForm.date||!recordForm.description.trim()){
       notify(tx.recordRequired)
       return
     }
 
-    const item:ServiceRecord={
-      id:crypto.randomUUID(),
-      ...record,
-    }
+    const next=[
+      {
+        id:crypto.randomUUID(),
+        carId:activeCarId,
+        ...recordForm,
+      },
+      ...records,
+    ]
 
-    const next=[item,...records]
-    setRecords(next)
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(next))
-    setRecord(emptyRecord)
+    persistRecords(next)
+    setRecordForm(emptyRecord)
     setShowRecordForm(false)
     notify(tx.recordSaved)
   }
 
   function deleteRecord(id:string){
     const next=records.filter(item=>item.id!==id)
-    setRecords(next)
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(next))
+    persistRecords(next)
   }
-
-  const total=useMemo(
-    ()=>records.reduce((sum,item)=>sum+(Number(item.cost)||0),0),
-    [records],
-  )
-
-  const carTitle=[car.make,car.model].filter(Boolean).join(' ')||tx.title
 
   return <main style={styles.page}>
     <section style={styles.phone}>
@@ -253,69 +370,121 @@ export default function CarPage(){
         </select>
       </header>
 
-      {!editing&&(
-        <section style={styles.hero}>
-          <div>
-            <small style={styles.heroLabel}>{tx.title}</small>
-            <h2 style={styles.heroTitle}>{carTitle}</h2>
-            <p style={styles.heroMeta}>
-              {[car.year,car.engine,car.transmission].filter(Boolean).join(' · ')}
-            </p>
-          </div>
-          <button type="button" onClick={()=>setEditing(true)} style={styles.secondaryButton}>
-            {tx.edit}
-          </button>
-          <div style={styles.metrics}>
-            <div style={styles.metric}>
-              <small>{tx.mileage}</small>
-              <b>{car.mileage?`${Number(car.mileage).toLocaleString('ru-RU')} км`:'—'}</b>
-            </div>
-            <div style={styles.metric}>
-              <small>{tx.plate}</small>
-              <b>{car.plate||'—'}</b>
-            </div>
-          </div>
-        </section>
-      )}
+      <div style={styles.toolbar}>
+        <button type="button" onClick={openNewCar} style={styles.primarySmall}>
+          + {tx.addCar}
+        </button>
+      </div>
 
-      {editing&&(
+      {showCarForm&&(
         <form onSubmit={saveCar} style={styles.card}>
           <div style={styles.grid}>
-            <Field label={tx.make} value={car.make} onChange={value=>setCar({...car,make:value})}/>
-            <Field label={tx.model} value={car.model} onChange={value=>setCar({...car,model:value})}/>
-            <Field label={tx.year} value={car.year} onChange={value=>setCar({...car,year:value})} type="number"/>
-            <Field label={tx.plate} value={car.plate} onChange={value=>setCar({...car,plate:value})}/>
-            <Field label={tx.vin} value={car.vin} onChange={value=>setCar({...car,vin:value})}/>
-            <Field label={tx.mileage} value={car.mileage} onChange={value=>setCar({...car,mileage:value})} type="number"/>
-            <Field label={tx.engine} value={car.engine} onChange={value=>setCar({...car,engine:value})}/>
-            <Field label={tx.transmission} value={car.transmission} onChange={value=>setCar({...car,transmission:value})}/>
-            <Field label={tx.fuel} value={car.fuel} onChange={value=>setCar({...car,fuel:value})}/>
+            <Field label={tx.make} value={carForm.make} onChange={value=>setCarForm({...carForm,make:value})}/>
+            <Field label={tx.model} value={carForm.model} onChange={value=>setCarForm({...carForm,model:value})}/>
+            <Field label={tx.year} value={carForm.year} onChange={value=>setCarForm({...carForm,year:value})} type="number"/>
+            <Field label={tx.plate} value={carForm.plate} onChange={value=>setCarForm({...carForm,plate:value})}/>
+            <Field label={tx.vin} value={carForm.vin} onChange={value=>setCarForm({...carForm,vin:value})}/>
+            <Field label={tx.mileage} value={carForm.mileage} onChange={value=>setCarForm({...carForm,mileage:value})} type="number"/>
+            <Field label={tx.engine} value={carForm.engine} onChange={value=>setCarForm({...carForm,engine:value})}/>
+            <Field label={tx.transmission} value={carForm.transmission} onChange={value=>setCarForm({...carForm,transmission:value})}/>
+            <Field label={tx.fuel} value={carForm.fuel} onChange={value=>setCarForm({...carForm,fuel:value})}/>
           </div>
-          <button type="submit" style={styles.primaryButton}>{tx.save}</button>
+
+          <div style={styles.actions}>
+            <button type="button" onClick={()=>setShowCarForm(false)} style={styles.secondaryButton}>
+              {tx.cancel}
+            </button>
+            <button type="submit" style={styles.primaryButton}>{tx.saveCar}</button>
+          </div>
         </form>
       )}
 
-      {!editing&&(
+      {cars.length===0&&!showCarForm&&(
+        <div style={styles.empty}>
+          <div style={styles.emptyIcon}>🚗</div>
+          <h3 style={styles.emptyTitle}>{tx.noCars}</h3>
+          <p style={styles.subtitle}>{tx.noCarsDesc}</p>
+        </div>
+      )}
+
+      {cars.length>0&&(
+        <div style={styles.carList}>
+          {cars.map(car=>{
+            const isActive=car.id===activeCarId
+            return <article key={car.id} style={{
+              ...styles.carListCard,
+              ...(isActive?styles.carListCardActive:{}),
+            }}>
+              <button type="button" onClick={()=>selectCar(car.id)} style={styles.carSelect}>
+                <span style={styles.carEmoji}>🚗</span>
+                <span style={{textAlign:'left',flex:1}}>
+                  <b style={styles.carName}>{car.make} {car.model}</b>
+                  <small style={styles.carMeta}>
+                    {[car.year,car.plate,car.mileage?`${Number(car.mileage).toLocaleString('ru-RU')} км`:null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </small>
+                </span>
+                <strong>{isActive?'✓':'›'}</strong>
+              </button>
+            </article>
+          })}
+        </div>
+      )}
+
+      {activeCar&&(
         <>
+          <section style={styles.hero}>
+            <div>
+              <small style={styles.heroLabel}>{tx.cardTitle}</small>
+              <h2 style={styles.heroTitle}>{activeCar.make} {activeCar.model}</h2>
+              <p style={styles.heroMeta}>
+                {[activeCar.year,activeCar.engine,activeCar.transmission,activeCar.fuel]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            </div>
+
+            <div style={styles.metrics}>
+              <div style={styles.metric}>
+                <small>{tx.mileage}</small>
+                <b>{activeCar.mileage?`${Number(activeCar.mileage).toLocaleString('ru-RU')} км`:'—'}</b>
+              </div>
+              <div style={styles.metric}>
+                <small>{tx.plate}</small>
+                <b>{activeCar.plate||'—'}</b>
+              </div>
+            </div>
+
+            <div style={styles.heroActions}>
+              <button type="button" onClick={()=>editCar(activeCar)} style={styles.heroButton}>
+                {tx.edit}
+              </button>
+              <button type="button" onClick={()=>deleteCar(activeCar.id)} style={styles.heroDangerButton}>
+                {tx.delete}
+              </button>
+            </div>
+          </section>
+
           <div style={styles.sectionHead}>
             <div>
               <h2 style={styles.sectionTitle}>{tx.history}</h2>
               <p style={styles.subtitle}>{tx.total}: {total.toLocaleString('ru-RU')} ₸</p>
             </div>
             <button type="button" onClick={()=>setShowRecordForm(true)} style={styles.primarySmall}>
-              + {tx.add}
+              + {tx.addRecord}
             </button>
           </div>
 
           {showRecordForm&&(
             <form onSubmit={addRecord} style={styles.card}>
               <div style={styles.grid}>
-                <Field label={tx.date} value={record.date} onChange={value=>setRecord({...record,date:value})} type="date"/>
+                <Field label={tx.date} value={recordForm.date} onChange={value=>setRecordForm({...recordForm,date:value})} type="date"/>
                 <label style={styles.field}>
                   <span style={styles.label}>{tx.category}</span>
                   <select
-                    value={record.category}
-                    onChange={event=>setRecord({...record,category:event.target.value})}
+                    value={recordForm.category}
+                    onChange={event=>setRecordForm({...recordForm,category:event.target.value})}
                     style={styles.input}
                   >
                     <option>Замена масла</option>
@@ -329,11 +498,13 @@ export default function CarPage(){
                     <option>Другое</option>
                   </select>
                 </label>
-                <Field label={tx.mileage} value={record.mileage} onChange={value=>setRecord({...record,mileage:value})} type="number"/>
-                <Field label={tx.cost} value={record.cost} onChange={value=>setRecord({...record,cost:value})} type="number"/>
+                <Field label={tx.mileage} value={recordForm.mileage} onChange={value=>setRecordForm({...recordForm,mileage:value})} type="number"/>
+                <Field label={tx.cost} value={recordForm.cost} onChange={value=>setRecordForm({...recordForm,cost:value})} type="number"/>
               </div>
-              <Field label={tx.description} value={record.description} onChange={value=>setRecord({...record,description:value})}/>
-              <Field label={tx.notes} value={record.notes} onChange={value=>setRecord({...record,notes:value})}/>
+
+              <Field label={tx.description} value={recordForm.description} onChange={value=>setRecordForm({...recordForm,description:value})}/>
+              <Field label={tx.notes} value={recordForm.notes} onChange={value=>setRecordForm({...recordForm,notes:value})}/>
+
               <div style={styles.actions}>
                 <button type="button" onClick={()=>setShowRecordForm(false)} style={styles.secondaryButton}>
                   {tx.cancel}
@@ -343,15 +514,15 @@ export default function CarPage(){
             </form>
           )}
 
-          {records.length===0?(
+          {activeRecords.length===0?(
             <div style={styles.empty}>
               <div style={styles.emptyIcon}>📖</div>
-              <h3 style={styles.emptyTitle}>{tx.empty}</h3>
-              <p style={styles.subtitle}>{tx.emptyDesc}</p>
+              <h3 style={styles.emptyTitle}>{tx.emptyHistory}</h3>
+              <p style={styles.subtitle}>{tx.emptyHistoryDesc}</p>
             </div>
           ):(
             <div style={styles.list}>
-              {records.map(item=>
+              {activeRecords.map(item=>
                 <article key={item.id} style={styles.record}>
                   <div style={styles.recordTop}>
                     <div>
@@ -359,12 +530,16 @@ export default function CarPage(){
                       <h3 style={styles.recordTitle}>{item.category}</h3>
                       <p style={styles.recordDescription}>{item.description}</p>
                     </div>
-                    <b style={styles.cost}>{item.cost?`${Number(item.cost).toLocaleString('ru-RU')} ₸`:'—'}</b>
+                    <b style={styles.cost}>
+                      {item.cost?`${Number(item.cost).toLocaleString('ru-RU')} ₸`:'—'}
+                    </b>
                   </div>
+
                   <div style={styles.recordMeta}>
                     <span>{item.mileage?`${Number(item.mileage).toLocaleString('ru-RU')} км`:'—'}</span>
                     {item.notes&&<span>{item.notes}</span>}
                   </div>
+
                   <button type="button" onClick={()=>deleteRecord(item.id)} style={styles.deleteButton}>
                     {tx.delete}
                   </button>
@@ -408,7 +583,7 @@ const styles:Record<string,React.CSSProperties>={
     background:'#eef2f5',
     display:'flex',
     justifyContent:'center',
-    padding:'0',
+    padding:0,
     fontFamily:'Arial, sans-serif',
     color:'#17202b',
   },
@@ -425,7 +600,7 @@ const styles:Record<string,React.CSSProperties>={
     display:'flex',
     alignItems:'center',
     gap:12,
-    marginBottom:18,
+    marginBottom:14,
   },
   back:{
     width:42,
@@ -447,30 +622,10 @@ const styles:Record<string,React.CSSProperties>={
     padding:'10px 8px',
     background:'#fff',
   },
-  hero:{
-    background:'linear-gradient(135deg,#17202b,#344150)',
-    color:'#fff',
-    borderRadius:24,
-    padding:20,
-    boxShadow:'0 12px 30px rgba(23,32,43,.18)',
-    marginBottom:18,
-  },
-  heroLabel:{opacity:.72},
-  heroTitle:{fontSize:26,margin:'6px 0'},
-  heroMeta:{margin:0,opacity:.78},
-  metrics:{
-    display:'grid',
-    gridTemplateColumns:'1fr 1fr',
-    gap:10,
-    marginTop:18,
-  },
-  metric:{
-    background:'rgba(255,255,255,.1)',
-    borderRadius:16,
-    padding:14,
+  toolbar:{
     display:'flex',
-    flexDirection:'column',
-    gap:6,
+    justifyContent:'flex-end',
+    marginBottom:12,
   },
   card:{
     background:'#fff',
@@ -496,12 +651,12 @@ const styles:Record<string,React.CSSProperties>={
     boxSizing:'border-box',
     border:'1px solid #dbe1e7',
     borderRadius:13,
-    padding:'12px 12px',
+    padding:'12px',
     fontSize:15,
     background:'#fff',
   },
   primaryButton:{
-    width:'100%',
+    flex:1,
     border:0,
     borderRadius:15,
     padding:'14px 16px',
@@ -528,6 +683,94 @@ const styles:Record<string,React.CSSProperties>={
     color:'#17202b',
     cursor:'pointer',
   },
+  actions:{display:'flex',gap:10},
+  empty:{
+    textAlign:'center',
+    background:'#fff',
+    borderRadius:22,
+    padding:'34px 20px',
+    boxShadow:'0 8px 24px rgba(23,32,43,.06)',
+    marginBottom:18,
+  },
+  emptyIcon:{fontSize:42},
+  emptyTitle:{margin:'10px 0 4px'},
+  carList:{
+    display:'flex',
+    flexDirection:'column',
+    gap:10,
+    marginBottom:16,
+  },
+  carListCard:{
+    background:'#fff',
+    border:'1px solid #e2e7ec',
+    borderRadius:18,
+    overflow:'hidden',
+  },
+  carListCardActive:{
+    border:'2px solid #f4b000',
+  },
+  carSelect:{
+    width:'100%',
+    display:'flex',
+    alignItems:'center',
+    gap:12,
+    padding:14,
+    border:0,
+    background:'transparent',
+    cursor:'pointer',
+  },
+  carEmoji:{fontSize:26},
+  carName:{display:'block',fontSize:16},
+  carMeta:{display:'block',marginTop:4,color:'#6b7280'},
+  hero:{
+    background:'linear-gradient(135deg,#17202b,#344150)',
+    color:'#fff',
+    borderRadius:24,
+    padding:20,
+    boxShadow:'0 12px 30px rgba(23,32,43,.18)',
+    marginBottom:18,
+  },
+  heroLabel:{opacity:.72},
+  heroTitle:{fontSize:26,margin:'6px 0'},
+  heroMeta:{margin:0,opacity:.78},
+  metrics:{
+    display:'grid',
+    gridTemplateColumns:'1fr 1fr',
+    gap:10,
+    marginTop:18,
+  },
+  metric:{
+    background:'rgba(255,255,255,.1)',
+    borderRadius:16,
+    padding:14,
+    display:'flex',
+    flexDirection:'column',
+    gap:6,
+  },
+  heroActions:{
+    display:'flex',
+    gap:10,
+    marginTop:14,
+  },
+  heroButton:{
+    flex:1,
+    border:'1px solid rgba(255,255,255,.25)',
+    background:'rgba(255,255,255,.08)',
+    color:'#fff',
+    borderRadius:12,
+    padding:'10px 12px',
+    fontWeight:700,
+    cursor:'pointer',
+  },
+  heroDangerButton:{
+    border:'1px solid rgba(255,120,120,.4)',
+    background:'rgba(180,35,24,.25)',
+    color:'#fff',
+    borderRadius:12,
+    padding:'10px 12px',
+    fontWeight:700,
+    cursor:'pointer',
+  },
   sectionHead:{
     display:'flex',
     alignItems:'center',
@@ -536,16 +779,6 @@ const styles:Record<string,React.CSSProperties>={
     margin:'20px 2px 12px',
   },
   sectionTitle:{margin:0,fontSize:20},
-  actions:{display:'flex',gap:10},
-  empty:{
-    textAlign:'center',
-    background:'#fff',
-    borderRadius:22,
-    padding:'34px 20px',
-    boxShadow:'0 8px 24px rgba(23,32,43,.06)',
-  },
-  emptyIcon:{fontSize:42},
-  emptyTitle:{margin:'10px 0 4px'},
   list:{display:'flex',flexDirection:'column',gap:12},
   record:{
     background:'#fff',
