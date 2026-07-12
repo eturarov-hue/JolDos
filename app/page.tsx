@@ -32,42 +32,42 @@ const testUsers: TestUser[] = [
     },
   },
   {
-    id: 'master_test_1',
-    name: 'Мастер TEST 1',
+    id: 'master_aibek',
+    name: 'Айбек',
     role: 'master',
     providerType: 'master',
     route: '/master',
     icon: '🧰',
     description: {
-      ru: 'Первый тестовый мастер',
-      kk: 'Бірінші сынақ шебері',
-      en: 'First test specialist',
+      ru: 'Тестовый мастер №1',
+      kk: '№1 сынақ шебері',
+      en: 'Test specialist No. 1',
     },
   },
   {
-    id: 'master_test_2',
-    name: 'Мастер TEST 2',
+    id: 'master_nurlan',
+    name: 'Нурлан',
     role: 'master',
     providerType: 'master',
     route: '/master',
     icon: '🔧',
     description: {
-      ru: 'Второй тестовый мастер',
-      kk: 'Екінші сынақ шебері',
-      en: 'Second test specialist',
+      ru: 'Тестовый мастер №2',
+      kk: '№2 сынақ шебері',
+      en: 'Test specialist No. 2',
     },
   },
   {
-    id: 'master_test_3',
-    name: 'Мастер TEST 3',
+    id: 'master_sanzhar',
+    name: 'Санжар',
     role: 'master',
     providerType: 'master',
     route: '/master',
     icon: '🛠️',
     description: {
-      ru: 'Третий тестовый мастер',
-      kk: 'Үшінші сынақ шебері',
-      en: 'Third test specialist',
+      ru: 'Тестовый мастер №3',
+      kk: '№3 сынақ шебері',
+      en: 'Test specialist No. 3',
     },
   },
   {
@@ -102,8 +102,7 @@ export default function Portal() {
         }),
       )
     } catch {
-      // Переход всё равно должен работать,
-      // даже если localStorage недоступен.
+      // Переход должен работать даже при недоступном localStorage.
     }
 
     router.push(user.route)
