@@ -17,6 +17,11 @@ import {
 import { TEST_MASTER_LIST } from '@/lib/test-masters'
 import type { Order, Stage, Tab } from '@/types'
 
+type ClientOrder = Order & {
+  serviceType?: string
+  providerType?: ServiceProviderType
+}
+
 
 const ACTIVE_ORDER_STATUSES = new Set([
   'Новый заказ',
