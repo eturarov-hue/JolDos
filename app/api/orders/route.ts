@@ -189,6 +189,36 @@ function uniqueOrders(rows: DbOrder[]) {
   )
 }
 
+
+const SERVICE_PROVIDER_TYPES: Record<string, string[]> = {
+  tow_truck: ['tow_truck'],
+  battery: ['master', 'electrician'],
+  tire_service: ['tire_service'],
+  fuel_delivery: ['master', 'fuel_delivery'],
+  car_unlock: ['master', 'locksmith'],
+  road_assistance: ['master'],
+  starter: ['electrician'],
+  generator: ['electrician'],
+  electrical_diagnostics: ['electrician'],
+  car_wash: ['car_wash'],
+  service_station: ['service_station'],
+}
+
+function providerCanHandleOrder(
+  row: DbOrder,
+  providerType: string | null,
+) {
+  if (!providerType) {
+    return true
+  }
+
+  const allowed =
+    SERVICE_PROVIDER_TYPES[row.service_type] ||
+    [row.provider_type]
+
+  return allowed.includes(providerType)
+}
+
 export async function GET(request: NextRequest) {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -282,13 +312,6 @@ export async function GET(request: NextRequest) {
       availableParams.set('status', 'eq.Новый заказ')
       availableParams.set('order', 'created_at.desc')
 
-      if (providerType) {
-        availableParams.set(
-          'provider_type',
-          `eq.${providerType}`,
-        )
-      }
-
       const [assignedResult, availableResult, rejectedIds] =
         await Promise.all([
           fetchOrders(assignedParams),
@@ -305,7 +328,9 @@ export async function GET(request: NextRequest) {
       }
 
       const availableRows = availableResult.rows.filter(
-        row => !rejectedIds.has(String(row.id)),
+        row =>
+          providerCanHandleOrder(row, providerType) &&
+          !rejectedIds.has(String(row.id)),
       )
 
       const rows = uniqueOrders([
