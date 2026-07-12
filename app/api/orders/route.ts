@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { TEST_MASTER_LIST } from '@/lib/test-masters'
 
 type DbOrder = {
   id: string
@@ -219,6 +220,55 @@ function providerCanHandleOrder(
   return allowed.includes(providerType)
 }
 
+
+const DRIVER_VISIBLE_STATUSES = [
+  'Новый заказ',
+  'Ищем мастера',
+  'Мастер принял заказ',
+  'Мастер едет',
+  'Мастер прибыл',
+  'Работа выполняется',
+  'Нет свободных специалистов',
+]
+
+async function updateOrder(
+  id: string,
+  patch: Record<string, string | number | null>,
+) {
+  const params = new URLSearchParams()
+  params.set('id', `eq.${id}`)
+
+  const response = await fetch(ordersUrl(params), {
+    method: 'PATCH',
+    headers: supabaseHeaders({
+      Prefer: 'return=representation',
+    }),
+    body: JSON.stringify(patch),
+    cache: 'no-store',
+  })
+
+  const data = await readJson(response)
+
+  if (!response.ok) {
+    return {
+      error: errorResponse(
+        'Не удалось обновить заказ',
+        data,
+        response.status,
+      ),
+      order: null as DbOrder | null,
+    }
+  }
+
+  const order = (
+    Array.isArray(data) ? data[0] : data
+  ) as DbOrder | undefined
+
+  return {
+    order: order || null,
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     if (!supabaseUrl || !supabaseKey) {
@@ -278,13 +328,7 @@ export async function GET(request: NextRequest) {
       const orders = result.rows.map(toShared)
       const activeOrder =
         orders.find(order =>
-          [
-            'Новый заказ',
-            'Мастер принял заказ',
-            'Мастер едет',
-            'Мастер прибыл',
-            'Работа выполняется',
-          ].includes(order.status),
+          DRIVER_VISIBLE_STATUSES.includes(order.status),
         ) || null
 
       return NextResponse.json(
@@ -441,7 +485,7 @@ export async function POST(request: NextRequest) {
     activeParams.set('client', `eq.${client}`)
     activeParams.set(
       'status',
-      'in.(Новый заказ,Мастер принял заказ,Мастер едет,Мастер прибыл,Работа выполняется)',
+      'in.(Новый заказ,Ищем мастера,Мастер принял заказ,Мастер едет,Мастер прибыл,Работа выполняется,Нет свободных специалистов)',
     )
     activeParams.set('limit', '1')
 
@@ -734,10 +778,93 @@ export async function DELETE(request: NextRequest) {
         }
       }
 
+      const orderParams = new URLSearchParams()
+      orderParams.set('select', '*')
+      orderParams.set('id', `eq.${id}`)
+      orderParams.set('limit', '1')
+
+      const orderResult = await fetchOrders(orderParams)
+
+      if (orderResult.error) {
+        return orderResult.error
+      }
+
+      const order = orderResult.rows[0]
+
+      if (!order) {
+        return NextResponse.json(
+          { error: 'Заказ не найден' },
+          { status: 404 },
+        )
+      }
+
+      const rejectedNamesParams = new URLSearchParams()
+      rejectedNamesParams.set('select', 'provider_name')
+      rejectedNamesParams.set('order_id', `eq.${id}`)
+
+      const rejectedResponse = await fetch(
+        rejectionsUrl(rejectedNamesParams),
+        {
+          method: 'GET',
+          headers: supabaseHeaders(),
+          cache: 'no-store',
+        },
+      )
+
+      const rejectedData = await readJson(rejectedResponse)
+
+      if (!rejectedResponse.ok) {
+        return errorResponse(
+          'Не удалось проверить оставшихся мастеров',
+          rejectedData,
+          rejectedResponse.status,
+        )
+      }
+
+      const rejectedNames = new Set(
+        (Array.isArray(rejectedData) ? rejectedData : []).map(
+          item =>
+            String(
+              (item as { provider_name?: unknown }).provider_name || '',
+            ),
+        ),
+      )
+
+      const suitableMasters = TEST_MASTER_LIST.filter(masterItem =>
+        providerCanHandleOrder(order, masterItem.providerType),
+      )
+
+      const remainingMasters = suitableMasters.filter(
+        masterItem => !rejectedNames.has(masterItem.name),
+      )
+
+      if (suitableMasters.length > 0 && remainingMasters.length === 0) {
+        const updateResult = await updateOrder(id, {
+          status: 'Нет свободных специалистов',
+          master: null,
+        })
+
+        if (updateResult.error) {
+          return updateResult.error
+        }
+
+        return NextResponse.json({
+          ok: true,
+          rejectedBy: providerName,
+          orderId: id,
+          noProvidersAvailable: true,
+          order: updateResult.order
+            ? toShared(updateResult.order)
+            : null,
+        })
+      }
+
       return NextResponse.json({
         ok: true,
         rejectedBy: providerName,
         orderId: id,
+        noProvidersAvailable: false,
+        remainingProviders: remainingMasters.length,
       })
     }
 
