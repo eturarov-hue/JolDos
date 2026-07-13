@@ -84,6 +84,7 @@ export default function Home(){
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
   const [sosOpen,setSosOpen]=useState(false)
   const [notificationsOpen,setNotificationsOpen]=useState(false)
+  const [roleMenuOpen,setRoleMenuOpen]=useState(false)
   const [readNotificationIds,setReadNotificationIds]=useState<string[]>([])
   const [notificationsHydrated,setNotificationsHydrated]=useState(false)
   const [showAllServices,setShowAllServices]=useState(false)
@@ -349,27 +350,38 @@ export default function Home(){
 
   function toggleNotifications(){
     setSosOpen(false)
-    setNotificationsOpen(value=>{
-      const next=!value
-      if(next){
-        setReadNotificationIds(prev=>Array.from(new Set([
-          ...prev,
-          ...clientNotifications.map(item=>item.id),
-        ])))
-      }
-      return next
-    })
+    setRoleMenuOpen(false)
+    setNotificationsOpen(value=>!value)
   }
 
   function switchRole(){
     setNotificationsOpen(false)
     setSosOpen(false)
+    setRoleMenuOpen(false)
     window.location.assign('/')
+  }
+
+  function openRoleMenu(){
+    setNotificationsOpen(false)
+    setSosOpen(false)
+    setRoleMenuOpen(value=>!value)
+  }
+
+  function openDriverApp(){
+    setRoleMenuOpen(false)
+    setTab('home')
+    setStage('start')
+  }
+
+  function openStationApp(){
+    setRoleMenuOpen(false)
+    window.location.assign('/station')
   }
 
   function openMasterApp(){
     setNotificationsOpen(false)
     setSosOpen(false)
+    setRoleMenuOpen(false)
     window.location.assign('/master')
   }
 
@@ -621,7 +633,8 @@ export default function Home(){
             type="button"
             className="menu-button"
             aria-label="Меню"
-            onClick={()=>setTab('profile')}
+            onClick={openRoleMenu}
+            aria-expanded={roleMenuOpen}
           >
             ☰
           </button>
@@ -656,6 +669,32 @@ export default function Home(){
           </button>
         </header>
 
+        {roleMenuOpen&&(
+          <section className="role-switch-panel" aria-label={tx('roleBack')}>
+            <div className="role-switch-head">
+              <button type="button" onClick={()=>setRoleMenuOpen(false)} aria-label={tx('home')}>←</button>
+              <div>
+                <b>{lang==='kk'?'Қосымшаны таңдаңыз':lang==='en'?'Choose application':'Выберите приложение'}</b>
+                <small>{lang==='kk'?'Рөлдер арасында тікелей ауысу':lang==='en'?'Switch directly between roles':'Переключение без выхода из заказа'}</small>
+              </div>
+            </div>
+            <div className="role-switch-grid">
+              <button type="button" className="active" onClick={openDriverApp}>
+                <span>🚗</span><div><b>{lang==='kk'?'Жүргізуші':lang==='en'?'Driver':'Водитель'}</b><small>{lang==='kk'?'Ағымдағы қосымша':lang==='en'?'Current application':'Текущее приложение'}</small></div><em>✓</em>
+              </button>
+              <button type="button" onClick={openMasterApp}>
+                <span>🛠️</span><div><b>{lang==='kk'?'Шебер':lang==='en'?'Master':'Мастер'}</b><small>{lang==='kk'?'Тапсырыстарды қабылдау':lang==='en'?'Accept orders':'Принимать и завершать заказы'}</small></div><em>›</em>
+              </button>
+              <button type="button" onClick={openStationApp}>
+                <span>🏢</span><div><b>{lang==='kk'?'СТО':lang==='en'?'Service station':'СТО'}</b><small>{lang==='kk'?'Ұйым кабинеті':lang==='en'?'Organization account':'Кабинет организации'}</small></div><em>›</em>
+              </button>
+              <button type="button" onClick={switchRole}>
+                <span>↔</span><div><b>{tx('roleBack')}</b><small>{lang==='kk'?'Барлық тест аккаунттары':lang==='en'?'All test accounts':'Все тестовые аккаунты'}</small></div><em>›</em>
+              </button>
+            </div>
+          </section>
+        )}
+
         {notificationsOpen&&(
           <section className="notifications-panel" aria-label={tx('notifications')}>
             <div className="notifications-head">
@@ -686,11 +725,12 @@ export default function Home(){
               clientNotifications.map(item=>(
                 <button
                   type="button"
-                  className="notification-item"
+                  className={`notification-item ${readNotificationIds.includes(item.id)?'is-read':'is-unread'}`}
                   key={item.id}
                   onClick={()=>openNotification(item)}
                 >
                   <span>{item.icon}</span>
+                  {!readNotificationIds.includes(item.id)&&<i className="unread-dot" aria-label={lang==='kk'?'Оқылмаған':lang==='en'?'Unread':'Не прочитано'}/>}
                   <div>
                     <b>{item.title}</b>
                     <small>{item.description}</small>
@@ -705,7 +745,7 @@ export default function Home(){
         <button
           type="button"
           className="home-sos refined-sos"
-          onClick={()=>{setNotificationsOpen(false);setSosOpen(value=>!value)}}
+          onClick={()=>{setNotificationsOpen(false);setRoleMenuOpen(false);setSosOpen(value=>!value)}}
           aria-expanded={sosOpen}
         >
           <span className="refined-alert">!</span>
@@ -1278,6 +1318,25 @@ export default function Home(){
       .refined-language{display:flex;align-items:center;justify-content:center}
       .refined-language .lang-switcher,.refined-language [class*="language"]{transform:scale(.9);transform-origin:center}
 
+      .role-switch-panel{
+        margin-top:10px;padding:14px;border:1px solid #e5eaf0;border-radius:20px;background:#fff;
+        box-shadow:0 14px 34px rgba(15,23,42,.16);
+      }
+      .role-switch-head{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid #edf0f3}
+      .role-switch-head>button{width:36px;height:36px;border:0;border-radius:12px;background:#f2f4f7;font-size:20px;cursor:pointer}
+      .role-switch-head>div{display:flex;flex-direction:column;gap:2px}
+      .role-switch-head b{font-size:17px;color:#101828}
+      .role-switch-head small{font-size:12px;color:#667085}
+      .role-switch-grid{display:grid;gap:8px;padding-top:12px}
+      .role-switch-grid>button{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) 18px;gap:10px;align-items:center;padding:10px;border:1px solid #edf0f3;border-radius:15px;background:#fff;text-align:left;color:#101828;cursor:pointer}
+      .role-switch-grid>button.active{background:#fff9e8;border-color:#ffd666}
+      .role-switch-grid>button>span{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#f2f4f7;font-size:21px}
+      .role-switch-grid>button.active>span{background:#ffedb3}
+      .role-switch-grid>button>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+      .role-switch-grid b{font-size:14px}
+      .role-switch-grid small{font-size:12px;color:#667085}
+      .role-switch-grid em{font-style:normal;font-size:20px;color:#98a2b3}
+
       .notifications-panel{
         margin:0 0 12px;
         padding:12px;
@@ -1305,10 +1364,14 @@ export default function Home(){
       .notifications-empty>b{font-size:14px}
       .notifications-empty>small{max-width:280px;font-size:12px;line-height:1.4;color:#667085}
       .notification-item{
+        position:relative;
         width:100%;min-width:0;display:grid;grid-template-columns:44px minmax(0,1fr) 16px;
         gap:10px;align-items:center;padding:11px 8px;border:0;border-top:1px solid #edf0f3;
         background:#fff;color:#101828;text-align:left;cursor:pointer;
       }
+      .notification-item.is-unread{background:#fffaf0}
+      .notification-item.is-read{opacity:.78}
+      .notification-item .unread-dot{position:absolute;left:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#ef233c;box-shadow:0 0 0 3px #fff;font-style:normal}
       .notification-item>span{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#fff4cf;font-size:21px}
       .notification-item>div{min-width:0;display:flex;flex-direction:column;gap:3px}
       .notification-item b{font-size:14px;line-height:1.2}
