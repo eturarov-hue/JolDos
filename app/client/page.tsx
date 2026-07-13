@@ -1532,6 +1532,133 @@ export default function Home(){
           font-size:44px!important;
         }
       }
+
+
+      /* JolDos approved home — final visual pass */
+      html,body{background:#eef2f7!important}
+      .app-shell{background:#eef2f7!important}
+      .phone.home-phone{
+        width:min(100%,430px)!important;
+        max-width:430px!important;
+        margin:0 auto!important;
+        background:#fff!important;
+        box-shadow:0 0 0 1px rgba(15,23,42,.03),0 24px 70px rgba(15,23,42,.14)!important;
+      }
+      .refined-home{background:#fff!important}
+      .refined-sticky{
+        position:relative!important;
+        padding:0 14px 12px!important;
+        background:#fff!important;
+        box-shadow:none!important;
+        border-bottom:0!important;
+      }
+      .refined-header{
+        min-height:88px!important;
+        grid-template-columns:44px 1fr auto 44px!important;
+      }
+      .refined-wordmark{
+        display:grid!important;
+        grid-template-columns:auto auto!important;
+        justify-content:center!important;
+        align-items:end!important;
+        column-gap:0!important;
+        line-height:1!important;
+      }
+      .refined-wordmark b,.refined-wordmark strong{
+        grid-row:1!important;
+        font-size:33px!important;
+        font-weight:900!important;
+        color:#08142c!important;
+        letter-spacing:-2px!important;
+      }
+      .refined-wordmark strong{color:#08142c!important}
+      .refined-wordmark small{display:none!important}
+      .refined-header .menu-button,.refined-header .notify-button{
+        background:transparent!important;
+        border-radius:10px!important;
+      }
+      .refined-language{transform:scale(.84)!important;transform-origin:right center!important}
+      .refined-sos{
+        min-height:124px!important;
+        grid-template-columns:64px 1fr 26px!important;
+        grid-template-areas:'alert text arrow'!important;
+        gap:18px!important;
+        padding:22px 20px!important;
+        border-radius:18px!important;
+        background:linear-gradient(135deg,#ef2b2d 0%,#f20f12 100%)!important;
+        box-shadow:0 14px 30px rgba(239,43,45,.22)!important;
+      }
+      .refined-sos .refined-alert{grid-area:alert!important;width:58px!important;height:58px!important;border:0!important;border-radius:0!important;background:#fff!important;color:#ef2024!important;clip-path:polygon(50% 0,100% 100%,0 100%)!important;padding-top:13px!important;font-size:40px!important}
+      .refined-sos>b{display:none!important}
+      .refined-sos>div{grid-area:text!important;gap:8px!important}
+      .refined-sos>div strong{font-size:29px!important;line-height:1!important}
+      .refined-sos>div small{font-size:14px!important;font-weight:600!important}
+      .refined-sos>em{grid-area:arrow!important;font-size:42px!important;font-style:normal!important;line-height:1!important}
+      .services-section{padding:26px 14px 0!important}
+      .home-section-title{margin-bottom:14px!important}
+      .home-section-title h2{font-size:21px!important;color:#0b1730!important}
+      .home-section-title button,.home-section-title a{color:#0867ee!important;font-size:14px!important;font-weight:700!important}
+      .refined-services{gap:10px!important;padding:2px 1px 12px!important}
+      .refined-services .service-card{
+        min-width:108px!important;
+        width:108px!important;
+        height:178px!important;
+        padding:14px 9px!important;
+        border-radius:18px!important;
+        background:#fff!important;
+        box-shadow:0 8px 22px rgba(15,23,42,.09)!important;
+      }
+      .refined-services .service-card svg{width:64px!important;height:64px!important}
+      .refined-services .service-card strong{font-size:14px!important;line-height:1.25!important;min-height:54px!important}
+      .refined-services .service-card small{display:none!important}
+      .refined-services.is-all{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      .refined-services.is-all .service-card{width:auto!important;min-width:0!important}
+      .refined-offers,.refined-car-section,.refined-reminders{padding:0 14px!important;margin-top:24px!important}
+      .offer-row{gap:10px!important}
+      .offer-row button{
+        min-width:152px!important;
+        width:152px!important;
+        height:138px!important;
+        border-radius:17px!important;
+        padding:14px!important;
+      }
+      .offer-row b{font-size:16px!important;line-height:1.25!important}
+      .offer-row span{font-size:16px!important;border-radius:9px!important}
+      .refined-car-card{
+        min-height:142px!important;
+        grid-template-columns:128px minmax(0,1fr) auto 16px!important;
+        padding:12px 14px!important;
+        border-radius:18px!important;
+      }
+      .refined-car-emoji{width:128px!important;height:104px!important;font-size:72px!important;background:#fff!important}
+      .refined-car-card>div b{font-size:20px!important}
+      .refined-car-card>div small{font-size:13px!important}
+      .refined-car-card>strong{font-size:12px!important;padding:10px 12px!important;border-radius:999px!important}
+      .reminder-list{border-radius:18px!important}
+      .reminder-list a{min-height:78px!important;padding:10px 14px!important;grid-template-columns:50px 1fr auto 14px!important}
+      .reminder-list i{width:48px!important;height:48px!important;border-radius:14px!important;font-size:24px!important}
+      .reminder-list span b{font-size:15px!important}
+      .reminder-list span small{font-size:13px!important}
+      .reminder-list strong{font-size:14px!important}
+      .bottom-nav{background:rgba(255,255,255,.97)!important;backdrop-filter:blur(18px)!important;border-top:1px solid #e8edf3!important}
+      @media(max-width:430px){
+        .phone.home-phone{max-width:none!important;box-shadow:none!important}
+        .refined-header{grid-template-columns:40px 1fr auto 40px!important;gap:5px!important}
+        .refined-wordmark b,.refined-wordmark strong{font-size:29px!important}
+        .refined-sos{min-height:112px!important;grid-template-columns:54px 1fr 22px!important;padding:19px 16px!important;gap:14px!important}
+        .refined-sos .refined-alert{width:50px!important;height:50px!important;font-size:34px!important}
+        .refined-sos>div strong{font-size:25px!important}
+        .refined-sos>div small{font-size:13px!important}
+        .refined-services .service-card{min-width:102px!important;width:102px!important;height:168px!important}
+        .refined-services .service-card svg{width:58px!important;height:58px!important}
+        .offer-row button{min-width:146px!important;width:146px!important;height:132px!important}
+        .refined-car-card{grid-template-columns:108px minmax(0,1fr) 15px!important}
+        .refined-car-emoji{width:108px!important;height:92px!important;font-size:62px!important}
+        .refined-car-card>strong{grid-column:2!important;justify-self:start!important}
+        .refined-car-card>em{grid-column:3!important;grid-row:1/3!important}
+        .reminder-list strong{display:block!important;font-size:12px!important}
+      }
+
     `}</style>
   </main>
 }
