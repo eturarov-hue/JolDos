@@ -394,16 +394,33 @@ export default function Home(){
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
   }
   function ServiceIcon({id}:{id:string}){
-    const common={width:54,height:54,viewBox:'0 0 64 64',fill:'none',xmlns:'http://www.w3.org/2000/svg'} as const
-    if(id==='tow') return <svg {...common}><path d="M8 40h31l8-10h7v16H8z" fill="#F5A800"/><path d="M13 30h22v10H13z" fill="#FFC928"/><circle cx="18" cy="49" r="6" fill="#17202B"/><circle cx="47" cy="49" r="6" fill="#17202B"/><path d="M39 31h7l5 7H39z" fill="#D7E8F8"/><path d="M5 26h14v4H5z" fill="#17202B"/></svg>
-    if(id==='jump_start') return <svg {...common}><rect x="12" y="17" width="40" height="35" rx="7" fill="#17202B"/><rect x="20" y="11" width="9" height="7" rx="2" fill="#17202B"/><rect x="36" y="11" width="9" height="7" rx="2" fill="#17202B"/><path d="M33 21l-8 14h8l-3 10 11-16h-8z" fill="#FFC928"/><path d="M17 27h7M20.5 23.5v7M42 27h7" stroke="#FFC928" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='wheel_change') return <svg {...common}><circle cx="32" cy="32" r="25" fill="#15181D"/><circle cx="32" cy="32" r="14" fill="#E9EDF1"/><circle cx="32" cy="32" r="5" fill="#15181D"/><path d="M32 18v9M32 37v9M18 32h9M37 32h9M22 22l6 6M36 36l6 6M42 22l-6 6M28 36l-6 6" stroke="#737C87" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='fuel_delivery') return <svg {...common}><path d="M15 10h31l4 8v36H14V18z" fill="#FFC928"/><path d="M20 16h22v14H20z" fill="#FFF5D0"/><path d="M47 20h5c4 0 6 3 6 7v13" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/><path d="M31 35c5 6 7 9 7 12a7 7 0 1 1-14 0c0-3 2-6 7-12z" fill="#17202B"/></svg>
-    if(id==='car_unlock') return <svg {...common}><rect x="13" y="29" width="38" height="27" rx="6" fill="#FFC928"/><path d="M22 29v-7c0-8 5-14 13-14 6 0 10 3 12 8" stroke="#17202B" strokeWidth="7" strokeLinecap="round"/><circle cx="32" cy="41" r="4" fill="#17202B"/><path d="M32 44v6" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
-    if(id==='road_assistance') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#E7EDF3"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M25 12l3 5M39 12l-3 5" stroke="#17202B" strokeWidth="3" strokeLinecap="round"/><path d="M22 31h20" stroke="#6BAFE8" strokeWidth="3"/></svg>
-    if(id==='car_wash') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#DCE8F2"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M19 10l2-4M31 9V4M43 10l2-4" stroke="#46B8FF" strokeWidth="4" strokeLinecap="round"/></svg>
-    if(id==='starter'||id==='generator'||id==='electrical_diagnostics') return <svg {...common}><rect x="12" y="12" width="40" height="40" rx="10" fill="#17202B"/><path d="M34 17L21 36h11l-3 11 15-22H33z" fill="#FFC928"/></svg>
-    return <svg {...common}><path d="M10 26l22-17 22 17v29H10z" fill="#17202B"/><rect x="20" y="32" width="24" height="23" rx="3" fill="#FFC928"/><path d="M25 43h14M32 36v14" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
+    const common={width:96,height:72,viewBox:'0 0 120 90',fill:'none',xmlns:'http://www.w3.org/2000/svg'} as const
+    if(id==='jump_start') return <svg {...common} aria-hidden="true"><defs><linearGradient id="bat" x1="20" y1="15" x2="95" y2="78" gradientUnits="userSpaceOnUse"><stop stopColor="#263345"/><stop offset="1" stopColor="#0B1018"/></linearGradient><filter id="s1"><feDropShadow dx="0" dy="5" stdDeviation="4" floodOpacity=".22"/></filter></defs><g filter="url(#s1)"><rect x="24" y="27" width="55" height="44" rx="9" fill="url(#bat)"/><rect x="34" y="20" width="12" height="9" rx="3" fill="#111827"/><rect x="60" y="20" width="12" height="9" rx="3" fill="#111827"/><path d="M51 35 40 52h12l-5 13 17-22H52l5-8Z" fill="#FFD12A"/><path d="M90 27c-9 5-13 11-12 20" stroke="#E32636" strokeWidth="5" strokeLinecap="round"/><path d="m92 23 7 13-10 4-6-14 9-3Z" fill="#E32636"/><path d="M26 29c-9 5-13 11-12 20" stroke="#111827" strokeWidth="5" strokeLinecap="round"/><path d="m18 25 8 12-10 5-7-13 9-4Z" fill="#111827"/></g></svg>
+    if(id==='wheel_change') return <svg {...common} aria-hidden="true"><defs><radialGradient id="tire" cx="0" cy="0" r="1" gradientTransform="translate(56 42) rotate(90) scale(34)"><stop stopColor="#4A4F57"/><stop offset=".63" stopColor="#1B1E23"/><stop offset="1" stopColor="#050607"/></radialGradient><linearGradient id="rim" x1="35" y1="22" x2="76" y2="66"><stop stopColor="#FAFCFF"/><stop offset=".5" stopColor="#9AA3AD"/><stop offset="1" stopColor="#E8EDF2"/></linearGradient><filter id="s2"><feDropShadow dx="0" dy="5" stdDeviation="4" floodOpacity=".2"/></filter></defs><g filter="url(#s2)"><circle cx="56" cy="44" r="35" fill="url(#tire)"/><circle cx="56" cy="44" r="22" fill="url(#rim)"/><circle cx="56" cy="44" r="7" fill="#343A43"/><path d="M56 23v14M56 51v14M35 44h14M63 44h14M41 29l10 10M61 49l10 10M71 29 61 39M51 49 41 59" stroke="#626B76" strokeWidth="5" strokeLinecap="round"/><path d="m83 18 8 6-24 37-8-6 24-37Z" fill="#2B313A"/><path d="m88 17 7 5-4 7-8-6 5-6Z" fill="#F2B400"/></g></svg>
+    if(id==='tow') return <svg {...common} aria-hidden="true"><defs><linearGradient id="truck" x1="18" y1="28" x2="104" y2="69"><stop stopColor="#FFD433"/><stop offset="1" stopColor="#F0A900"/></linearGradient><filter id="s3"><feDropShadow dx="0" dy="5" stdDeviation="4" floodOpacity=".2"/></filter></defs><g filter="url(#s3)"><path d="M16 51h56l12-19h18l9 15v18H16V51Z" fill="url(#truck)"/><path d="M78 51h30l-8-14H87l-9 14Z" fill="#DCEFFF"/><rect x="22" y="40" width="48" height="8" rx="3" fill="#202833"/><path d="m27 39 28-17 5 5-23 14" fill="#E9A900"/><path d="M56 22h9l15 19h-9L56 22Z" fill="#1B2430"/><path d="M78 18h11v6H78z" fill="#1B2430"/><circle cx="34" cy="67" r="10" fill="#171C24"/><circle cx="34" cy="67" r="4" fill="#AEB7C2"/><circle cx="91" cy="67" r="10" fill="#171C24"/><circle cx="91" cy="67" r="4" fill="#AEB7C2"/></g></svg>
+    if(id==='fuel_delivery') return <svg {...common} aria-hidden="true"><defs><linearGradient id="fuel" x1="31" y1="13" x2="78" y2="76"><stop stopColor="#FF4B42"/><stop offset="1" stopColor="#D90B16"/></linearGradient><filter id="s4"><feDropShadow dx="0" dy="5" stdDeviation="4" floodOpacity=".22"/></filter></defs><g filter="url(#s4)"><path d="M37 14h36l9 11v51H31V20l6-6Z" fill="url(#fuel)"/><path d="M42 20h24l7 9v11H42V20Z" fill="#F9D6D7" opacity=".75"/><path d="M75 24h10c7 0 12 6 12 13v22" stroke="#151B24" strokeWidth="6" strokeLinecap="round"/><path d="m95 57 8 2v13H91V62l4-5Z" fill="#151B24"/><path d="M56 45c8 9 11 14 11 20a11 11 0 1 1-22 0c0-6 3-11 11-20Z" fill="#981019" opacity=".72"/></g></svg>
+    if(id==='car_unlock') return <svg {...common} aria-hidden="true"><defs><linearGradient id="carblue" x1="13" y1="38" x2="90" y2="74"><stop stopColor="#4FA8FF"/><stop offset="1" stopColor="#1263C7"/></linearGradient><filter id="s5"><feDropShadow dx="0" dy="5" stdDeviation="4" floodOpacity=".2"/></filter></defs><g filter="url(#s5)"><path d="M14 57 24 39c3-6 8-9 15-9h28c8 0 13 4 17 11l8 16v12H14V57Z" fill="url(#carblue)"/><path d="M31 36h35c5 0 8 2 11 7l5 9H24l7-16Z" fill="#D9F0FF"/><circle cx="31" cy="69" r="8" fill="#141922"/><circle cx="77" cy="69" r="8" fill="#141922"/><rect x="75" y="33" width="32" height="36" rx="9" fill="#121722"/><path d="M83 34v-7c0-9 5-15 13-15s13 6 13 15v5" stroke="#121722" strokeWidth="7" strokeLinecap="round"/><circle cx="91" cy="49" r="5" fill="#FFC928"/><path d="M91 54v7" stroke="#FFC928" strokeWidth="4" strokeLinecap="round"/></g></svg>
+    if(id==='car_wash') return <svg {...common} aria-hidden="true"><defs><linearGradient id="wash" x1="18" y1="38" x2="93" y2="70"><stop stopColor="#4FB6FF"/><stop offset="1" stopColor="#1768CE"/></linearGradient></defs><path d="M15 58 25 40c3-6 8-9 15-9h29c8 0 13 4 17 11l8 16v11H15V58Z" fill="url(#wash)"/><path d="M32 37h35c5 0 9 2 12 8l4 7H25l7-15Z" fill="#E8F7FF"/><circle cx="32" cy="69" r="8" fill="#151A22"/><circle cx="79" cy="69" r="8" fill="#151A22"/><path d="M27 19c0 4-5 6-5 11M51 12c0 5-5 7-5 12M76 18c0 4-5 6-5 11" stroke="#4AC7FF" strokeWidth="5" strokeLinecap="round"/></svg>
+    if(id==='road_assistance') return <svg {...common} aria-hidden="true"><defs><linearGradient id="road" x1="17" y1="31" x2="101" y2="73"><stop stopColor="#F6C928"/><stop offset="1" stopColor="#E79E00"/></linearGradient></defs><path d="M14 59 24 42c4-7 9-10 16-10h30c8 0 14 4 18 11l9 16v11H14V59Z" fill="url(#road)"/><path d="M31 38h37c5 0 9 2 12 8l5 7H24l7-15Z" fill="#EFF7FF"/><circle cx="32" cy="70" r="8" fill="#171C24"/><circle cx="80" cy="70" r="8" fill="#171C24"/><path d="M53 13h9l3 13H50l3-13Z" fill="#EF3340"/><path d="m39 19 8 7M76 19l-8 7" stroke="#EF3340" strokeWidth="4" strokeLinecap="round"/></svg>
+    if(id==='starter'||id==='generator'||id==='electrical_diagnostics') return <svg {...common} aria-hidden="true"><defs><linearGradient id="elec" x1="25" y1="15" x2="89" y2="77"><stop stopColor="#263345"/><stop offset="1" stopColor="#0B1018"/></linearGradient></defs><rect x="24" y="14" width="72" height="62" rx="18" fill="url(#elec)"/><path d="m62 23-22 31h18l-7 20 28-39H61l8-12Z" fill="#FFD12A"/></svg>
+    return <svg {...common} aria-hidden="true"><defs><linearGradient id="garage" x1="19" y1="20" x2="99" y2="74"><stop stopColor="#243043"/><stop offset="1" stopColor="#10151D"/></linearGradient></defs><path d="m18 39 42-28 42 28v39H18V39Z" fill="url(#garage)"/><rect x="36" y="45" width="48" height="33" rx="6" fill="#FFC928"/><path d="M43 60h34M60 50v22" stroke="#1B2430" strokeWidth="6" strokeLinecap="round"/></svg>
+  }
+
+  function CarArtwork(){
+    return <svg viewBox="0 0 220 120" role="img" aria-label="Toyota Prado"><defs><linearGradient id="body" x1="28" y1="31" x2="190" y2="99"><stop stopColor="#252A31"/><stop offset=".5" stopColor="#0E1116"/><stop offset="1" stopColor="#343B44"/></linearGradient><linearGradient id="glass" x1="67" y1="35" x2="153" y2="67"><stop stopColor="#DDF3FF"/><stop offset="1" stopColor="#607A91"/></linearGradient><filter id="carshadow"><feDropShadow dx="0" dy="7" stdDeviation="6" floodOpacity=".24"/></filter></defs><g filter="url(#carshadow)"><path d="M26 78 42 46c5-10 13-15 24-16l76-4c16-1 29 7 38 21l17 28v22H24L26 78Z" fill="url(#body)"/><path d="M67 37h62c13 0 22 5 30 16l10 15H52l15-31Z" fill="url(#glass)"/><path d="M97 34v34M137 34l11 34" stroke="#161B22" strokeWidth="5"/><path d="M31 76h160" stroke="#5C6570" strokeWidth="3"/><path d="M28 78h23v13H26" fill="#242A31"/><path d="M184 73h15v18h-20" fill="#242A31"/><path d="M45 69h21v8H43zM161 68h25v9h-27z" fill="#EEF8FF"/><rect x="95" y="73" width="30" height="10" rx="3" fill="#101318" stroke="#68717C"/><circle cx="63" cy="96" r="17" fill="#11151B"/><circle cx="63" cy="96" r="8" fill="#B3BBC4"/><circle cx="166" cy="96" r="17" fill="#11151B"/><circle cx="166" cy="96" r="8" fill="#B3BBC4"/><path d="M40 85h145" stroke="#0B0D11" strokeWidth="5"/></g></svg>
+  }
+
+  function OfferArtwork({kind}:{kind:'oil'|'tow'|'tire'}){
+    if(kind==='oil')return <svg viewBox="0 0 150 100" aria-hidden="true"><defs><linearGradient id="oilb" x1="31" y1="12" x2="93" y2="91"><stop stopColor="#3D424B"/><stop offset="1" stopColor="#0D1015"/></linearGradient></defs><path d="M59 10h35l8 14v65H46V25l13-15Z" fill="url(#oilb)"/><path d="M58 27h31v23H58z" fill="#EDEFF2"/><path d="M64 32h19v4H64zM64 40h13v4H64z" fill="#181C22"/><path d="M107 39h17l8 12v38h-30V47l5-8Z" fill="#272C34"/><path d="M18 55h26v34H15V64l3-9Z" fill="#1D2229"/><path d="M70 58c7 8 10 13 10 18a10 10 0 1 1-20 0c0-5 3-10 10-18Z" fill="#F5A800"/></svg>
+    if(kind==='tow')return <svg viewBox="0 0 180 100" aria-hidden="true"><path d="M15 60h91l17-27h26l15 24v27H15V60Z" fill="#F4B600"/><path d="M113 60h44l-13-20h-18l-13 20Z" fill="#E8F5FF"/><rect x="25" y="47" width="76" height="10" rx="3" fill="#202833"/><path d="m55 45 37-23 7 7-31 18" fill="#E69E00"/><circle cx="48" cy="84" r="13" fill="#171C24"/><circle cx="48" cy="84" r="5" fill="#B9C2CC"/><circle cx="134" cy="84" r="13" fill="#171C24"/><circle cx="134" cy="84" r="5" fill="#B9C2CC"/></svg>
+    return <svg viewBox="0 0 170 100" aria-hidden="true"><defs><radialGradient id="ot" cx="0" cy="0" r="1" gradientTransform="translate(72 58) rotate(90) scale(41)"><stop stopColor="#4C5158"/><stop offset=".7" stopColor="#171A1F"/><stop offset="1" stopColor="#050607"/></radialGradient></defs><circle cx="70" cy="58" r="40" fill="url(#ot)"/><circle cx="70" cy="58" r="24" fill="#C8D0D8"/><circle cx="70" cy="58" r="8" fill="#303741"/><circle cx="123" cy="66" r="31" fill="#111419"/><circle cx="123" cy="66" r="18" fill="#AEB7C0"/></svg>
+  }
+
+  function ReminderIcon({kind}:{kind:'oil'|'insurance'|'battery'|'tire'}){
+    if(kind==='oil')return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 18h26v19H10z" fill="#202833"/><path d="m14 18 4-7h14l4 7" stroke="#202833" strokeWidth="4" strokeLinejoin="round"/><path d="M24 22c5 6 7 9 7 12a7 7 0 1 1-14 0c0-3 2-6 7-12Z" fill="#FFC928"/></svg>
+    if(kind==='insurance')return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5 39 11v11c0 10-6 17-15 22C15 39 9 32 9 22V11l15-6Z" fill="#1577D8"/><path d="m16 24 5 5 11-13" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    if(kind==='battery')return <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="14" width="32" height="26" rx="5" fill="#17202B"/><rect x="14" y="9" width="7" height="6" rx="2" fill="#17202B"/><rect x="28" y="9" width="7" height="6" rx="2" fill="#17202B"/><path d="M17 24v7M13.5 27.5h7M29 27.5h7" stroke="#77D17D" strokeWidth="3" strokeLinecap="round"/></svg>
+    return <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="19" fill="#14181D"/><circle cx="24" cy="24" r="11" fill="#C9D0D8"/><circle cx="24" cy="24" r="4" fill="#2D343D"/><path d="M24 13v7M24 28v7M13 24h7M28 24h7" stroke="#606A75" strokeWidth="3" strokeLinecap="round"/></svg>
   }
 
   const homeServices=SERVICE_LIST
@@ -732,16 +749,16 @@ export default function Home(){
 
         <div className="offer-row">
           <button type="button" onClick={()=>openService('road_assistance')}>
-            <span>-20%</span>
-            <b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b>
+            <div className="offer-copy"><b>{lang==='kk'?'Май ауыстыру жеңілдікпен':lang==='en'?'Oil change discount':'Замена масла со скидкой'}</b><span>-20%</span></div>
+            <OfferArtwork kind="oil"/>
           </button>
           <button type="button" onClick={()=>openService('tow')}>
-            <span>-15%</span>
-            <b>{lang==='kk'?'Эвакуатор':lang==='en'?'Tow truck':'Эвакуатор'}</b>
+            <div className="offer-copy"><b>{lang==='kk'?'Эвакуатор жеңілдікпен':lang==='en'?'Tow truck discount':'Эвакуатор со скидкой'}</b><span>-15%</span></div>
+            <OfferArtwork kind="tow"/>
           </button>
           <button type="button" onClick={()=>openService('wheel_change')}>
-            <span>-10%</span>
-            <b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b>
+            <div className="offer-copy"><b>{lang==='kk'?'Шина сервисі жеңілдікпен':lang==='en'?'Tire service discount':'Шиномонтаж со скидкой'}</b><span>-10%</span></div>
+            <OfferArtwork kind="tire"/>
           </button>
         </div>
         <div className="offer-dots" aria-hidden="true"><i className="active"/><i/><i/><i/></div>
@@ -759,7 +776,7 @@ export default function Home(){
         </div>
 
         <Link href="/client/car" className="refined-car-card">
-          <span className="refined-car-emoji">🚙</span>
+          <span className="refined-car-art"><CarArtwork/></span>
 
           <div>
             <b>
@@ -799,22 +816,22 @@ export default function Home(){
 
         <div className="reminder-list">
           <Link href="/client/car">
-            <i>🛢️</i>
+            <i><ReminderIcon kind="oil"/></i>
             <span><b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b><small>{lang==='kk'?'1 200 км кейін':lang==='en'?'in 1,200 km':'через 1 200 км'}</small><span className="reminder-progress"><i/></span></span>
             <strong>≈ 20 дней</strong><em>›</em>
           </Link>
           <Link href="/client/car">
-            <i>🛡️</i>
+            <i><ReminderIcon kind="insurance"/></i>
             <span><b>{lang==='kk'?'Сақтандыру':lang==='en'?'Insurance':'Страховка'}</b><small>{lang==='kk'?'9 күннен кейін':lang==='en'?'in 9 days':'через 9 дней'}</small></span>
             <strong>до 20.05</strong><em>›</em>
           </Link>
           <Link href="/client/car">
-            <i>🔋</i>
+            <i><ReminderIcon kind="battery"/></i>
             <span><b>{lang==='kk'?'Аккумулятор':lang==='en'?'Battery':'Аккумулятор'}</b><small>{lang==='kk'?'Кепілдік 14 ай':lang==='en'?'14-month warranty':'Гарантия 14 месяцев'}</small></span>
             <strong>до 10.06</strong><em>›</em>
           </Link>
           <Link href="/client/car">
-            <i>🛞</i>
+            <i><ReminderIcon kind="tire"/></i>
             <span><b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b><small>{lang==='kk'?'3 500 км кейін':lang==='en'?'in 3,500 km':'через 3 500 км'}</small></span>
             <strong>≈ 45 дней</strong><em>›</em>
           </Link>
@@ -1304,7 +1321,7 @@ export default function Home(){
         box-shadow:0 10px 24px rgba(15,23,42,.075),inset 0 1px 0 rgba(255,255,255,.9)!important;
         scroll-snap-align:start;
       }
-      .refined-services .service-card svg{width:46px!important;height:46px!important}
+      .refined-services .service-card>svg{width:100%!important;height:74px!important;display:block;object-fit:contain;margin:-6px 0 4px}
       .refined-services .service-card strong{min-height:40px;font-size:14px!important;line-height:1.24!important;text-align:left}
       .refined-services .service-card small{margin-top:auto;font-size:12px!important;font-weight:800!important}
       .refined-services.is-all{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
@@ -1325,21 +1342,24 @@ export default function Home(){
       .refined-offers,.refined-car-section,.refined-reminders{padding:0 14px;margin-top:25px}
       .offer-row{padding:2px 1px 10px}
       .offer-row button{
-        flex:0 0 224px;min-width:224px;height:126px;padding:16px;border:0;border-radius:20px;
-        display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:7px;
-        color:#fff;background:linear-gradient(135deg,#121923,#313b49);box-shadow:0 12px 27px rgba(15,23,42,.16);
+        position:relative;flex:0 0 254px;min-width:254px;height:154px;padding:17px;border:0;border-radius:22px;
+        overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 52%;align-items:end;
+        color:#fff;background:linear-gradient(135deg,#111820,#2D3540);box-shadow:0 14px 30px rgba(15,23,42,.18);
       }
-      .offer-row button:nth-child(2){color:#121923;background:linear-gradient(135deg,#ffc51a,#f3a700)}
-      .offer-row button:nth-child(3){background:linear-gradient(135deg,#061d3e,#0e3e78)}
-      .offer-row span{padding:5px 8px;border-radius:8px;background:#f5222d;color:#fff;font-weight:900}
-      .offer-row b{font-size:18px}
+      .offer-row button:nth-child(2){color:#111827;background:linear-gradient(135deg,#FFD233,#F3A900)}
+      .offer-row button:nth-child(3){background:linear-gradient(135deg,#061A35,#0B3972)}
+      .offer-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:12px;text-align:left}
+      .offer-copy span{padding:7px 10px;border-radius:9px;background:#F5222D;color:#fff;font-weight:900;font-size:16px}
+      .offer-copy b{font-size:17px;line-height:1.2}
+      .offer-row button>svg{position:absolute;right:-5px;bottom:0;width:58%;height:90%;filter:drop-shadow(0 9px 9px rgba(0,0,0,.25))}
 
       .refined-car-card{
-        min-height:114px;padding:14px;border:1px solid #e8ebef;border-radius:22px;
-        display:grid;grid-template-columns:92px minmax(0,1fr) auto 16px;gap:11px;align-items:center;
+        min-height:132px;padding:14px;border:1px solid #e8ebef;border-radius:22px;
+        display:grid;grid-template-columns:146px minmax(0,1fr) auto 16px;gap:14px;align-items:center;
         background:#fff;box-shadow:0 10px 25px rgba(15,23,42,.075);color:#101828;text-decoration:none;
       }
-      .refined-car-emoji{width:92px;height:82px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f1f4f7,#fff);font-size:51px}
+      .refined-car-art{width:146px;height:96px;border-radius:16px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,#F8FAFC,#EEF2F6)}
+      .refined-car-art svg{width:142px;height:auto;display:block}
       .refined-car-card>div{min-width:0;display:flex;flex-direction:column;gap:5px}
       .refined-car-card>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
       .refined-car-card>div small{font-size:12px;color:#667085}
@@ -1349,7 +1369,7 @@ export default function Home(){
       .reminder-list{overflow:hidden;border:1px solid #e8ebef;border-radius:22px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.06)}
       .reminder-list a{min-height:74px;padding:10px 12px;border-bottom:1px solid #edf0f3;display:grid;grid-template-columns:44px minmax(0,1fr) auto 14px;gap:10px;align-items:center;color:#101828;text-decoration:none}
       .reminder-list a:last-child{border-bottom:0}
-      .reminder-list i{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#fff1c2;font-style:normal}
+      .reminder-list> a>i{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff1c2;font-style:normal;overflow:hidden}.reminder-list> a>i svg{width:34px;height:34px;display:block}
       .reminder-list a:nth-child(2) i{background:#dcefff}.reminder-list a:nth-child(3) i{background:#dcf6df}.reminder-list a:nth-child(4) i{background:#eee5ff}
       .reminder-list span{min-width:0;display:flex;flex-direction:column;gap:3px}.reminder-list span small{color:#667085}
       .reminder-list strong{font-size:11px;text-align:right;white-space:nowrap}.reminder-list em{color:#98a2b3;font-style:normal;font-size:21px}
@@ -1371,12 +1391,20 @@ export default function Home(){
         .refined-sos{min-height:96px;padding:15px!important;grid-template-columns:48px 64px minmax(0,1fr) 18px!important}
         .refined-sos>b{font-size:31px!important}.refined-sos>div strong{font-size:14px!important}.refined-sos>div small{font-size:11px!important}
         .refined-services .service-card{flex-basis:136px;min-width:136px;height:166px}
-        .refined-car-card{grid-template-columns:78px minmax(0,1fr) 14px}
-        .refined-car-emoji{width:78px;height:72px;font-size:44px}
+        .refined-car-card{grid-template-columns:118px minmax(0,1fr) 14px}
+        .refined-car-art{width:118px;height:82px}.refined-car-art svg{width:118px}
         .refined-car-card>strong{grid-column:2;justify-self:start}.refined-car-card>em{grid-column:3;grid-row:1/3}
         .reminder-list strong{display:none}
       }
 
+
+      @media(min-width:900px){
+        .phone.home-phone{width:min(100%,1040px)!important;margin:22px auto!important;border-radius:30px!important;box-shadow:0 24px 70px rgba(15,23,42,.16)!important}
+        .refined-services{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}
+        .refined-services .service-card{width:100%;min-width:0;max-width:none}
+        .offer-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
+        .offer-row button{width:100%;min-width:0}
+      }
       @media(max-width:380px){
         .sos-choice-grid{grid-template-columns:1fr}
         .sos-choice-grid button{min-height:82px}
