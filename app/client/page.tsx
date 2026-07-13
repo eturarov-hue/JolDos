@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BottomNav } from '@/components/BottomNav'
 import { ChatSheet } from '@/components/ChatSheet'
 import { MapView } from '@/components/MapView'
@@ -88,6 +89,7 @@ export default function Home(){
   const [readNotificationIds,setReadNotificationIds]=useState<string[]>([])
   const [notificationsHydrated,setNotificationsHydrated]=useState(false)
   const [showAllServices,setShowAllServices]=useState(false)
+  const [theme,setTheme]=useState<'dark'|'light'>('dark')
   const [cars,setCars]=useState<ClientCar[]>([])
 
   const selectedService=useMemo(
@@ -204,6 +206,17 @@ export default function Home(){
       )
     }catch{}
   },[notificationsHydrated,readNotificationIds])
+
+  useEffect(()=>{
+    try{
+      const savedTheme=localStorage.getItem('joldos-theme')
+      if(savedTheme==='light'||savedTheme==='dark')setTheme(savedTheme)
+    }catch{}
+  },[])
+
+  useEffect(()=>{
+    try{localStorage.setItem('joldos-theme',theme)}catch{}
+  },[theme])
 
   useEffect(()=>{
     let cancelled=false
@@ -516,18 +529,32 @@ export default function Home(){
   function PinIcon(){
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
   }
-  function ServiceIcon({id}:{id:string}){
-    const common={width:54,height:54,viewBox:'0 0 64 64',fill:'none',xmlns:'http://www.w3.org/2000/svg'} as const
-    if(id==='tow') return <svg {...common}><path d="M8 40h31l8-10h7v16H8z" fill="#F5A800"/><path d="M13 30h22v10H13z" fill="#FFC928"/><circle cx="18" cy="49" r="6" fill="#17202B"/><circle cx="47" cy="49" r="6" fill="#17202B"/><path d="M39 31h7l5 7H39z" fill="#D7E8F8"/><path d="M5 26h14v4H5z" fill="#17202B"/></svg>
-    if(id==='jump_start') return <svg {...common}><rect x="12" y="17" width="40" height="35" rx="7" fill="#17202B"/><rect x="20" y="11" width="9" height="7" rx="2" fill="#17202B"/><rect x="36" y="11" width="9" height="7" rx="2" fill="#17202B"/><path d="M33 21l-8 14h8l-3 10 11-16h-8z" fill="#FFC928"/><path d="M17 27h7M20.5 23.5v7M42 27h7" stroke="#FFC928" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='wheel_change') return <svg {...common}><circle cx="32" cy="32" r="25" fill="#15181D"/><circle cx="32" cy="32" r="14" fill="#E9EDF1"/><circle cx="32" cy="32" r="5" fill="#15181D"/><path d="M32 18v9M32 37v9M18 32h9M37 32h9M22 22l6 6M36 36l6 6M42 22l-6 6M28 36l-6 6" stroke="#737C87" strokeWidth="3" strokeLinecap="round"/></svg>
-    if(id==='fuel_delivery') return <svg {...common}><path d="M15 10h31l4 8v36H14V18z" fill="#FFC928"/><path d="M20 16h22v14H20z" fill="#FFF5D0"/><path d="M47 20h5c4 0 6 3 6 7v13" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/><path d="M31 35c5 6 7 9 7 12a7 7 0 1 1-14 0c0-3 2-6 7-12z" fill="#17202B"/></svg>
-    if(id==='car_unlock') return <svg {...common}><rect x="13" y="29" width="38" height="27" rx="6" fill="#FFC928"/><path d="M22 29v-7c0-8 5-14 13-14 6 0 10 3 12 8" stroke="#17202B" strokeWidth="7" strokeLinecap="round"/><circle cx="32" cy="41" r="4" fill="#17202B"/><path d="M32 44v6" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
-    if(id==='road_assistance') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#E7EDF3"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M25 12l3 5M39 12l-3 5" stroke="#17202B" strokeWidth="3" strokeLinecap="round"/><path d="M22 31h20" stroke="#6BAFE8" strokeWidth="3"/></svg>
-    if(id==='car_wash') return <svg {...common}><path d="M14 35c0-11 8-19 18-19s18 8 18 19v11H14z" fill="#DCE8F2"/><path d="M18 35h28l5 10H13z" fill="#17202B"/><circle cx="20" cy="47" r="5" fill="#FFC928"/><circle cx="44" cy="47" r="5" fill="#FFC928"/><path d="M19 10l2-4M31 9V4M43 10l2-4" stroke="#46B8FF" strokeWidth="4" strokeLinecap="round"/></svg>
-    if(id==='starter'||id==='generator'||id==='electrical_diagnostics') return <svg {...common}><rect x="12" y="12" width="40" height="40" rx="10" fill="#17202B"/><path d="M34 17L21 36h11l-3 11 15-22H33z" fill="#FFC928"/></svg>
-    return <svg {...common}><path d="M10 26l22-17 22 17v29H10z" fill="#17202B"/><rect x="20" y="32" width="24" height="23" rx="3" fill="#FFC928"/><path d="M25 43h14M32 36v14" stroke="#17202B" strokeWidth="4" strokeLinecap="round"/></svg>
+
+  function ServiceIcon({ id }: { id: string }) {
+  const iconByService: Record<string, string> = {
+    jump_start: "/joldos-home/battery.webp",
+    wheel_change: "/joldos-home/wheel.webp",
+    tow: "/joldos-home/tow.webp",
+    fuel_delivery: "/joldos-home/fuel.webp",
+    car_unlock: "/joldos-home/unlock.webp",
+    road_assistance: "/joldos-home/car.webp",
+    car_wash: "/joldos-home/car.webp",
+    starter: "/joldos-home/car.webp",
+    generator: "/joldos-home/car.webp",
+    electrical_diagnostics: "/joldos-home/car.webp",
   }
+
+  return (
+    <Image
+      src={iconByService[id] ?? "/joldos-home/car.webp"}
+      alt=""
+      width={84}
+      height={84}
+      className="service-image"
+      aria-hidden="true"
+    />
+  )
+}
 
   const homeServices=SERVICE_LIST
 
@@ -625,7 +652,7 @@ export default function Home(){
       openService(serviceId)
     }
 
-    return <div className="home-screen refined-home">
+    return <div className={`home-screen refined-home theme-${theme}`}>
       <div className="refined-sticky">
         <header className="home-header refined-header">
           <button
@@ -639,14 +666,14 @@ export default function Home(){
           </button>
 
           <div className="wordmark refined-wordmark">
-            <b>Jol</b><strong>Dos</strong>
-            <small>
-              {lang==='kk'
-                ? 'ЖОЛДАҒЫ КӨМЕК'
-                : lang==='en'
-                  ? 'ROADSIDE ASSISTANCE'
-                  : 'ПОМОЩЬ НА ДОРОГЕ'}
-            </small>
+            <Image
+              src="/joldos-logo.png"
+              alt="JolDos"
+              width={240}
+              height={100}
+              className="refined-logo-image"
+              priority
+            />
           </div>
 
           <div className="refined-language">
@@ -655,6 +682,15 @@ export default function Home(){
               onChange={setLang}
               compact
             />
+            <button
+              type="button"
+              className="theme-toggle"
+              aria-label={theme==='dark'?'Включить светлую тему':'Включить тёмную тему'}
+              title={theme==='dark'?'Светлая тема':'Тёмная тема'}
+              onClick={()=>setTheme(value=>value==='dark'?'light':'dark')}
+            >
+              {theme==='dark'?'☀':'☾'}
+            </button>
           </div>
 
           <button
@@ -878,7 +914,7 @@ export default function Home(){
         </div>
 
         <Link href="/client/car" className="refined-car-card">
-          <span className="refined-car-emoji">🚙</span>
+          <span className="refined-car-emoji"><Image src="/joldos-home/car.webp" alt="" width={112} height={82} aria-hidden="true" /></span>
 
           <div>
             <b>
@@ -972,23 +1008,26 @@ export default function Home(){
             <h2>
               {candidateCount>0
                 ? `${candidateCount} · ${selectedService?.title[lang]||tx('helpRoad')}`
-                : tx('searchingMaster')}
+                : selectedService?.title[lang]||tx('helpRoad')}
               <span>✓</span>
             </h2>
             <p>{tx('suitableDesc')}</p>
           </div>
         </div>
 
-        {candidateCount>0&&(
-          <div className="stats">
-            {candidates.slice(0,3).map((candidate,index)=>(
-              <span key={candidate.id}>
-                <b>{candidate.name}</b>
-                {8+index*3} мин
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="stats">
+          {candidateCount>0 ? candidates.slice(0,3).map((candidate,index)=>(
+            <span key={candidate.id}>
+              <b>{candidate.name}</b>
+              {8+index*3} мин
+            </span>
+          )) : (
+            <span>
+              <b>{lang==='kk'?'Өтінім жіберіледі':lang==='en'?'Request will be sent':'Заявка будет отправлена'}</b>
+              {lang==='kk'?'Жақын шеберлерге':lang==='en'?'To nearby specialists':'ближайшим мастерам'}
+            </span>
+          )}
+        </div>
 
         <div className="summary">
           <span>{tx('yourProblem')}</span>
@@ -1009,9 +1048,8 @@ export default function Home(){
           <button
             type="button"
             onClick={createOrder}
-            disabled={candidateCount===0}
-          >
-            {candidateCount>0?tx('call'):tx('searchingMaster')}
+            >
+            {tx('call')}
             <strong>→</strong>
           </button>
         </div>
@@ -1339,6 +1377,14 @@ export default function Home(){
         justify-content:center;
         line-height:1;
       }
+
+      .refined-logo-image{
+        display:block!important;
+        width:170px!important;
+        height:66px!important;
+        max-width:100%!important;
+        object-fit:contain!important;
+      }
       .refined-wordmark b,.refined-wordmark strong{display:inline;font-size:32px!important;letter-spacing:-1.9px}
       .refined-wordmark small{margin-top:6px;font-size:7px!important;letter-spacing:3px!important;white-space:nowrap;color:#111827!important;opacity:.78}
       .refined-language{display:flex;align-items:center;justify-content:center}
@@ -1507,7 +1553,8 @@ export default function Home(){
         display:grid;grid-template-columns:92px minmax(0,1fr) auto 16px;gap:11px;align-items:center;
         background:#fff;box-shadow:0 10px 25px rgba(15,23,42,.075);color:#101828;text-decoration:none;
       }
-      .refined-car-emoji{width:92px;height:82px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f1f4f7,#fff);font-size:51px}
+      .refined-car-emoji{width:92px;height:82px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f1f4f7,#fff);overflow:hidden}
+      .refined-car-emoji img{width:100%!important;height:100%!important;object-fit:contain!important}
       .refined-car-card>div{min-width:0;display:flex;flex-direction:column;gap:5px}
       .refined-car-card>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
       .refined-car-card>div small{font-size:12px;color:#667085}
@@ -1540,7 +1587,7 @@ export default function Home(){
         .refined-sos>b{font-size:31px!important}.refined-sos>div strong{font-size:14px!important}.refined-sos>div small{font-size:11px!important}
         .refined-services .service-card{flex-basis:136px;min-width:136px;height:166px}
         .refined-car-card{grid-template-columns:78px minmax(0,1fr) 14px}
-        .refined-car-emoji{width:78px;height:72px;font-size:44px}
+        .refined-car-emoji{width:78px;height:72px}
         .refined-car-card>strong{grid-column:2;justify-self:start}.refined-car-card>em{grid-column:3;grid-row:1/3}
         .reminder-list strong{display:none}
       }
@@ -1549,6 +1596,130 @@ export default function Home(){
         .sos-choice-grid{grid-template-columns:1fr}
         .sos-choice-grid button{min-height:82px}
       }
+
+
+      /* JolDos approved dark home design */
+      .home-phone{background:#05090d!important}
+      .refined-home{
+        background:
+          radial-gradient(circle at 50% -120px,rgba(255,174,0,.12),transparent 300px),
+          linear-gradient(180deg,#05090d 0%,#080d12 100%)!important;
+        color:#f8fafc!important;
+      }
+      .refined-sticky{
+        background:rgba(5,9,13,.97)!important;
+        box-shadow:0 10px 28px rgba(0,0,0,.38)!important;
+      }
+      .refined-header{
+        min-height:118px!important;
+        background:#05090d!important;
+        grid-template-columns:42px minmax(0,1fr) auto 42px!important;
+      }
+      .refined-wordmark{height:100px!important;overflow:visible}
+      .refined-logo-image{
+        width:190px!important;
+        height:86px!important;
+        max-height:86px!important;
+        object-fit:contain!important;
+        display:block!important;
+      }
+      .refined-header .menu-button,.refined-header .notify-button{
+        background:#11171d!important;
+        border:1px solid #2a3036!important;
+        color:#fff!important;
+        box-shadow:0 8px 20px rgba(0,0,0,.28)!important;
+      }
+      .refined-header .menu-button::before,.refined-header .menu-button::after{background:#fff!important}
+      .refined-header .menu-button::before{box-shadow:0 6px 0 #fff!important}
+      .refined-header .notify-button i{border-color:#05090d!important;background:#f59e0b!important}
+      .refined-language{color:#fff!important}
+
+      .services-section,.refined-offers,.refined-car-section,.refined-reminders{background:transparent!important}
+      .home-section-title h2{color:#f8fafc!important}
+      .home-section-title button,.home-section-title a{color:#f5a900!important}
+
+      .refined-services .service-card{
+        background:linear-gradient(180deg,#11161b 0%,#0c1116 100%)!important;
+        border:1px solid #2c333a!important;
+        box-shadow:0 12px 26px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.035)!important;
+        color:#fff!important;
+      }
+      .refined-services .service-card:hover{border-color:#f5a900!important}
+      .refined-services .service-card strong{
+        color:#fff!important;
+        min-height:42px!important;
+        font-weight:800!important;
+      }
+      .refined-services .service-card small{color:#f5a900!important}
+      .refined-services .service-card .service-image{
+        width:84px!important;
+        height:76px!important;
+        object-fit:contain!important;
+        align-self:center!important;
+        margin:-3px auto 8px!important;
+        filter:drop-shadow(0 8px 10px rgba(0,0,0,.28));
+      }
+
+      .refined-car-card{
+        background:linear-gradient(180deg,#11161b,#0c1116)!important;
+        border-color:#2c333a!important;
+        color:#fff!important;
+        box-shadow:0 12px 28px rgba(0,0,0,.28)!important;
+      }
+      .refined-car-emoji{background:#0b1117!important}
+      .refined-car-card>div small{color:#a8b1bd!important}
+      .refined-car-card>strong{background:#092b1a!important;color:#38d879!important}
+
+      .reminder-list{
+        background:#0e141a!important;
+        border-color:#2c333a!important;
+        box-shadow:0 12px 28px rgba(0,0,0,.26)!important;
+      }
+      .reminder-list a{color:#fff!important;border-color:#252c33!important}
+      .reminder-list span small{color:#a8b1bd!important}
+      .reminder-list strong{color:#f5a900!important}
+      .reminder-list i{background:#171d23!important}
+
+      .offer-row button{border:1px solid #2c333a!important}
+      .bottom-nav,nav{background:#0b1015!important;border-top-color:#242b32!important;color:#d4d9df!important}
+
+      @media(max-width:420px){
+        .refined-header{min-height:110px!important}
+        .refined-logo-image{width:170px!important;height:80px!important;max-height:80px!important}
+      }
+
+      .refined-language{gap:5px!important}
+      .theme-toggle{
+        width:32px;height:32px;flex:0 0 32px;border:1px solid #2c333a;border-radius:10px;
+        display:grid;place-items:center;background:#11171d;color:#f5a900;font-size:17px;
+        line-height:1;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.18);
+      }
+      .refined-logo-image{object-position:center!important}
+
+      .theme-light{
+        background:#f5f6f8!important;
+        color:#101828!important;
+      }
+      .theme-light .refined-sticky{background:rgba(255,255,255,.97)!important;box-shadow:0 7px 22px rgba(15,23,42,.07)!important}
+      .theme-light .refined-header{background:#fff!important}
+      .theme-light .refined-header .menu-button,.theme-light .refined-header .notify-button{background:#f7f8fa!important;border-color:#edf0f3!important;color:#111827!important;box-shadow:none!important}
+      .theme-light .refined-header .menu-button::before,.theme-light .refined-header .menu-button::after{background:#111827!important}
+      .theme-light .refined-header .menu-button::before{box-shadow:0 6px 0 #111827!important}
+      .theme-light .refined-header .notify-button i{border-color:#fff!important;background:#ef233c!important}
+      .theme-light .theme-toggle{background:#f7f8fa;color:#101828;border-color:#e5e7eb;box-shadow:none}
+      .theme-light .home-section-title h2{color:#101828!important}
+      .theme-light .refined-services .service-card{background:#fff!important;border-color:#edf0f3!important;box-shadow:0 10px 24px rgba(15,23,42,.08)!important;color:#101828!important}
+      .theme-light .refined-services .service-card strong{color:#101828!important}
+      .theme-light .refined-services .service-card small{color:#f0a500!important}
+      .theme-light .refined-car-card{background:#fff!important;border-color:#e6e9ee!important;color:#101828!important;box-shadow:0 10px 24px rgba(15,23,42,.08)!important}
+      .theme-light .refined-car-emoji{background:#f6f7f9!important}
+      .theme-light .refined-car-card>div small{color:#667085!important}
+      .theme-light .refined-car-card>strong{background:#e8f8ed!important;color:#159447!important}
+      .theme-light .reminder-list{background:#fff!important;border-color:#e6e9ee!important;box-shadow:0 10px 24px rgba(15,23,42,.08)!important}
+      .theme-light .reminder-list a{color:#101828!important;border-color:#edf0f3!important}
+      .theme-light .reminder-list span small{color:#667085!important}
+      .theme-light .reminder-list i{background:#f5f7fa!important}
+      .theme-light .offer-row button{border-color:#e5e7eb!important}
 
       .master-shortcut{
         width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
