@@ -1036,7 +1036,7 @@ export default function Home(){
 
       *,*::before,*::after{box-sizing:border-box}
 
-      .app-shell,.phone,.home-screen,.refined-home,.refined-sticky,
+      .app-shell,.home-screen,.refined-home,.refined-sticky,
       .services-section,.refined-offers,.refined-car-section,
       .refined-reminders,.sos-choice-panel,.notifications-panel{
         width:100%;
@@ -1044,8 +1044,20 @@ export default function Home(){
         min-width:0;
       }
 
-      .app-shell,.phone{overflow-x:hidden}
-      .phone{touch-action:pan-y}
+      .app-shell{
+        width:100%;
+        min-width:0;
+        overflow-x:hidden;
+      }
+
+      .phone{
+        width:min(100%,430px);
+        max-width:430px;
+        min-width:0;
+        margin:0 auto;
+        overflow-x:hidden;
+        touch-action:pan-y;
+      }
 
       .refined-home{
         height:100%;
