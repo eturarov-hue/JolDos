@@ -1315,14 +1315,14 @@ export default function Home(){
       .refined-services::-webkit-scrollbar,.offer-row::-webkit-scrollbar{display:none}
       .refined-services{padding:3px 1px 12px;scroll-snap-type:x proximity}
       .refined-services .service-card{
-        flex:0 0 142px;min-width:142px;height:172px;padding:15px 12px!important;border:1px solid rgba(15,23,42,.05)!important;
+        flex:0 0 148px;min-width:148px;height:188px;padding:15px 12px!important;border:1px solid rgba(15,23,42,.05)!important;
         border-radius:21px!important;display:flex;flex-direction:column;align-items:flex-start;
         background:linear-gradient(180deg,#fff 0%,#fbfbfc 100%)!important;
         box-shadow:0 10px 24px rgba(15,23,42,.075),inset 0 1px 0 rgba(255,255,255,.9)!important;
         scroll-snap-align:start;
       }
-      .refined-services .service-card>svg{width:100%!important;height:74px!important;display:block;object-fit:contain;margin:-6px 0 4px}
-      .refined-services .service-card strong{min-height:40px;font-size:14px!important;line-height:1.24!important;text-align:left}
+      .refined-services .service-card>svg{width:100%!important;height:88px!important;display:block;object-fit:contain;margin:-8px 0 6px}
+      .refined-services .service-card strong{min-height:44px;font-size:14px!important;line-height:1.28!important;text-align:left;overflow-wrap:normal;word-break:normal;hyphens:none}
       .refined-services .service-card small{margin-top:auto;font-size:12px!important;font-weight:800!important}
       .refined-services.is-all{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
       .refined-services.is-all .service-card{width:100%;min-width:0;max-width:100%}
@@ -1342,7 +1342,7 @@ export default function Home(){
       .refined-offers,.refined-car-section,.refined-reminders{padding:0 14px;margin-top:25px}
       .offer-row{padding:2px 1px 10px}
       .offer-row button{
-        position:relative;flex:0 0 254px;min-width:254px;height:154px;padding:17px;border:0;border-radius:22px;
+        position:relative;flex:0 0 272px;min-width:272px;height:164px;padding:17px;border:0;border-radius:22px;
         overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 52%;align-items:end;
         color:#fff;background:linear-gradient(135deg,#111820,#2D3540);box-shadow:0 14px 30px rgba(15,23,42,.18);
       }
@@ -1376,6 +1376,12 @@ export default function Home(){
 
       .bottom-nav,nav{max-width:100%}
 
+      @media(min-width:521px){
+        .app-shell{padding:28px 0}
+        .phone{min-height:calc(100dvh - 56px);border-radius:30px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.16)}
+        .refined-home{border-radius:30px}
+      }
+
       @media(max-width:520px){
         .app-shell{padding:0!important}
         .phone{width:100%!important;max-width:100%!important;min-height:100dvh;margin:0!important;border-radius:0!important}
@@ -1397,14 +1403,6 @@ export default function Home(){
         .reminder-list strong{display:none}
       }
 
-
-      @media(min-width:900px){
-        .phone.home-phone{width:min(100%,1040px)!important;margin:22px auto!important;border-radius:30px!important;box-shadow:0 24px 70px rgba(15,23,42,.16)!important}
-        .refined-services{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}
-        .refined-services .service-card{width:100%;min-width:0;max-width:none}
-        .offer-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
-        .offer-row button{width:100%;min-width:0}
-      }
       @media(max-width:380px){
         .sos-choice-grid{grid-template-columns:1fr}
         .sos-choice-grid button{min-height:82px}
