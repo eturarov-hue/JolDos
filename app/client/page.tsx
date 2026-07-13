@@ -83,6 +83,7 @@ export default function Home(){
   const [chatText,setChatText]=useState('')
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
   const [sosOpen,setSosOpen]=useState(false)
+  const [notificationsOpen,setNotificationsOpen]=useState(false)
   const [showAllServices,setShowAllServices]=useState(false)
   const [cars,setCars]=useState<ClientCar[]>([])
 
@@ -246,17 +247,15 @@ export default function Home(){
   function goHome(){ setTab('home'); setStage('start'); setSelected(''); setServiceType('road_assistance'); setProviderType('master'); setActiveMaster(0); setActiveOrderId(''); setRating(0) }
 
   function goBackInsideClient(){
-    if(tab!=='home'){
-      setTab('home')
-      return
-    }
+    setNotificationsOpen(false)
+    setSosOpen(false)
+    setTab('home')
+    setStage(activeOrderId?'active':'start')
+  }
 
-    if(stage==='active'){
-      setTab('orders')
-      return
-    }
-
-    setStage('start')
+  function toggleNotifications(){
+    setSosOpen(false)
+    setNotificationsOpen(value=>!value)
   }
   function chooseProblem(id:string){
     const service=getService(id)
@@ -529,16 +528,56 @@ export default function Home(){
             type="button"
             className="notify-button"
             aria-label={tx('notifications')}
-            onClick={()=>notify(tx('notifications'))}
+            onClick={toggleNotifications}
+            aria-expanded={notificationsOpen}
           >
             <BellIcon/><i>3</i>
           </button>
         </header>
 
+        {notificationsOpen&&(
+          <section className="notifications-panel" aria-label={tx('notifications')}>
+            <div className="notifications-head">
+              <div>
+                <b>{tx('notifications')}</b>
+                <small>{lang==='kk'?'3 жаңа хабарлама':lang==='en'?'3 new notifications':'3 новых уведомления'}</small>
+              </div>
+              <button type="button" onClick={()=>setNotificationsOpen(false)} aria-label="Закрыть">×</button>
+            </div>
+
+            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('orders')}}>
+              <span>🛠️</span>
+              <div>
+                <b>{lang==='kk'?'Шеберлер желіде':lang==='en'?'Specialists are online':'Мастера рядом онлайн'}</b>
+                <small>{lang==='kk'?'Жолдағы көмекке өтінім беруге болады':lang==='en'?'You can request roadside assistance':'Можно отправить заявку на помощь'}</small>
+              </div>
+              <em>›</em>
+            </button>
+
+            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);openService('wheel_change')}}>
+              <span>🛞</span>
+              <div>
+                <b>{lang==='kk'?'Дөңгелектерді тексеріңіз':lang==='en'?'Check your tires':'Проверьте колёса'}</b>
+                <small>{lang==='kk'?'Қысым мен шиналардың күйін тексеру уақыты':lang==='en'?'Time to check pressure and tire condition':'Пора проверить давление и состояние шин'}</small>
+              </div>
+              <em>›</em>
+            </button>
+
+            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('profile')}}>
+              <span>🎁</span>
+              <div>
+                <b>{lang==='kk'?'JolDos акциясы':lang==='en'?'JolDos offer':'Акция JolDos'}</b>
+                <small>{lang==='kk'?'Таңдалған қызметтерге жеңілдік':lang==='en'?'Discount on selected services':'Скидка на выбранные услуги'}</small>
+              </div>
+              <em>›</em>
+            </button>
+          </section>
+        )}
+
         <button
           type="button"
           className="home-sos refined-sos"
-          onClick={()=>setSosOpen(value=>!value)}
+          onClick={()=>{setNotificationsOpen(false);setSosOpen(value=>!value)}}
           aria-expanded={sosOpen}
         >
           <span className="refined-alert">!</span>
@@ -980,7 +1019,7 @@ export default function Home(){
   const isHomeStart=tab==='home'&&stage==='start'
   return <main className="app-shell">
     <div className={`phone ${isHomeStart?'home-phone':''}`}>
-      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}
+      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
       {renderTab()}
       <BottomNav tab={tab} onChange={setTab} lang={lang}/>
       <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
@@ -988,339 +1027,75 @@ export default function Home(){
     </div>
 
     <style jsx global>{`
+      html,body{
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden;
+        overscroll-behavior-x:none;
+      }
+
+      *,*::before,*::after{box-sizing:border-box}
+
+      .app-shell,.phone,.home-screen,.refined-home,.refined-sticky,
+      .services-section,.refined-offers,.refined-car-section,
+      .refined-reminders,.sos-choice-panel,.notifications-panel{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+      }
+
+      .app-shell,.phone{overflow-x:hidden}
+      .phone{touch-action:pan-y}
+
       .refined-home{
         height:100%;
         overflow-y:auto;
+        overflow-x:hidden;
         overscroll-behavior:contain;
+        touch-action:pan-y;
         padding-bottom:104px;
-        background:#f6f7f9;
-      }
-
-      .refined-sticky{
-        position:sticky;
-        top:0;
-        z-index:30;
-        padding:0 14px 12px;
-        background:rgba(255,255,255,.97);
-        backdrop-filter:blur(14px);
-        border-bottom:1px solid rgba(15,23,42,.06);
-      }
-
-      .refined-header{
-        margin:0 -14px;
-        padding:0 14px;
-        background:#fff;
-      }
-
-      .refined-sos{
-        width:100%;
-        margin:0;
-        border:0;
-        text-decoration:none;
-        cursor:pointer;
-      }
-
-      .refined-alert{
-        width:48px;
-        height:48px;
-        border:4px solid #fff;
-        border-radius:15px;
-        display:grid;
-        place-items:center;
-        font-size:30px;
-        font-weight:900;
-      }
-
-      .sos-choice-panel{
-        margin-top:10px;
-        max-height:55vh;
-        overflow-y:auto;
-        border:1px solid #e6e9ee;
-        border-radius:20px;
-        padding:14px;
-        background:#fff;
-        box-shadow:0 14px 34px rgba(15,23,42,.16);
-      }
-
-      .sos-choice-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        margin-bottom:10px;
-      }
-
-      .sos-choice-head b{font-size:18px}
-      .sos-choice-head button{
-        width:34px;
-        height:34px;
-        border:0;
-        border-radius:50%;
-        background:#f1f3f6;
-        font-size:24px;
-      }
-
-      .sos-choice-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:9px;
-      }
-
-      .sos-choice-grid button{
-        min-height:88px;
-        border:1px solid #edf0f4;
-        border-radius:16px;
-        background:#fff;
-        padding:10px;
-        display:flex;
-        flex-direction:column;
-        align-items:flex-start;
-        justify-content:center;
-        gap:7px;
-        text-align:left;
-        color:#101828;
-      }
-
-      .sos-choice-grid span{font-size:25px}
-      .sos-choice-grid b{font-size:13px;line-height:1.25}
-
-      .refined-services{
-        display:flex;
-        overflow-x:auto;
-        gap:10px;
-        padding-bottom:8px;
-        scroll-snap-type:x proximity;
-      }
-
-      .refined-services .service-card{
-        min-width:145px;
-        scroll-snap-align:start;
-      }
-
-      .refined-services.is-all{
-        display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        overflow:visible;
-      }
-
-      .refined-services.is-all .service-card{
-        min-width:0;
-      }
-
-      .refined-offers,
-      .refined-car-section,
-      .refined-reminders{
-        padding:0 14px;
-        margin-top:22px;
-      }
-
-      .offer-row{
-        display:flex;
-        gap:10px;
-        overflow-x:auto;
-        padding-bottom:6px;
-      }
-
-      .offer-row button{
-        min-width:220px;
-        height:118px;
-        border:0;
-        border-radius:18px;
-        padding:16px;
-        display:flex;
-        flex-direction:column;
-        justify-content:flex-end;
-        align-items:flex-start;
-        gap:7px;
-        color:#fff;
-        background:linear-gradient(135deg,#121923,#313b49);
-        box-shadow:0 10px 24px rgba(16,24,40,.14);
-      }
-
-      .offer-row button:nth-child(2){
-        color:#121923;
-        background:linear-gradient(135deg,#ffc51a,#f3a700);
-      }
-
-      .offer-row button:nth-child(3){
-        background:linear-gradient(135deg,#061d3e,#0e3e78);
-      }
-
-      .offer-row span{
-        border-radius:8px;
-        padding:5px 8px;
-        background:#f5222d;
-        color:#fff;
-        font-weight:900;
-      }
-
-      .offer-row b{font-size:18px}
-
-      .refined-car-card{
-        display:grid;
-        grid-template-columns:84px 1fr auto 18px;
-        gap:11px;
-        align-items:center;
-        padding:14px;
-        border:1px solid #e8ebef;
-        border-radius:20px;
-        background:#fff;
-        box-shadow:0 8px 22px rgba(16,24,40,.07);
-        color:#101828;
-        text-decoration:none;
-      }
-
-      .refined-car-emoji{
-        height:74px;
-        border-radius:15px;
-        display:grid;
-        place-items:center;
-        background:#f2f4f7;
-        font-size:48px;
-      }
-
-      .refined-car-card>div{
-        display:flex;
-        flex-direction:column;
-        gap:5px;
-        min-width:0;
-      }
-
-      .refined-car-card>div b{
-        overflow:hidden;
-        text-overflow:ellipsis;
-        white-space:nowrap;
-      }
-
-      .refined-car-card>div small{color:#667085}
-
-      .refined-car-card>strong{
-        padding:8px 10px;
-        border-radius:15px;
-        background:#e6f8e9;
-        color:#159447;
-        font-size:12px;
-        white-space:nowrap;
-      }
-
-      .refined-car-card>em{
-        color:#98a2b3;
-        font-size:24px;
-        font-style:normal;
-      }
-
-      .reminder-list{
-        overflow:hidden;
-        border:1px solid #e8ebef;
-        border-radius:20px;
-        background:#fff;
-        box-shadow:0 8px 22px rgba(16,24,40,.06);
-      }
-
-      .reminder-list a{
-        min-height:72px;
-        display:grid;
-        grid-template-columns:44px 1fr auto 14px;
-        gap:10px;
-        align-items:center;
-        padding:10px 12px;
-        border-bottom:1px solid #edf0f3;
-        color:#101828;
-        text-decoration:none;
-      }
-
-      .reminder-list a:last-child{border-bottom:0}
-      .reminder-list i{
-        width:42px;
-        height:42px;
-        border-radius:13px;
-        display:grid;
-        place-items:center;
-        background:#fff1c2;
-        font-style:normal;
-      }
-
-      .reminder-list a:nth-child(2) i{background:#dcefff}
-      .reminder-list a:nth-child(3) i{background:#dcf6df}
-      .reminder-list a:nth-child(4) i{background:#eee5ff}
-
-      .reminder-list span{
-        display:flex;
-        flex-direction:column;
-        gap:3px;
-      }
-
-      .reminder-list span small{color:#667085}
-      .reminder-list strong{
-        font-size:11px;
-        text-align:right;
-        white-space:nowrap;
-      }
-      .reminder-list em{
-        color:#98a2b3;
-        font-style:normal;
-        font-size:21px;
-      }
-
-      .refined-home .home-section-title a{
-        border:0;
-        background:transparent;
-        color:#f5a800;
-        font-weight:800;
-        text-decoration:none;
-      }
-
-      @media(max-width:420px){
-        .sos-choice-grid{grid-template-columns:1fr 1fr}
-        .refined-car-card{grid-template-columns:74px 1fr 16px}
-        .refined-car-card>strong{
-          grid-column:2;
-          justify-self:start;
-        }
-        .refined-car-card>em{
-          grid-column:3;
-          grid-row:1/3;
-        }
-        .refined-car-emoji{height:66px;font-size:42px}
-        .reminder-list strong{display:none}
-      }
-
-      /* Home UI v3: polished mobile layout without changing application logic */
-      .refined-home{
         scrollbar-width:none;
-        background:
-          radial-gradient(circle at 50% -120px,rgba(255,184,0,.08),transparent 320px),
-          #f5f6f8;
+        background:radial-gradient(circle at 50% -120px,rgba(255,184,0,.08),transparent 320px),#f5f6f8;
       }
       .refined-home::-webkit-scrollbar{display:none}
 
       .refined-sticky{
+        position:sticky;
+        top:0;
+        left:0;
+        right:0;
+        z-index:30;
         padding:0 14px 14px;
-        border-bottom:0;
+        background:rgba(255,255,255,.97);
+        backdrop-filter:blur(14px);
         box-shadow:0 7px 22px rgba(15,23,42,.07);
       }
 
       .refined-header{
         min-height:84px;
+        margin:0 -14px;
+        padding:0 14px;
         display:grid!important;
         grid-template-columns:42px minmax(0,1fr) auto 42px!important;
         gap:9px;
         align-items:center;
+        background:#fff;
       }
 
-      .refined-header .menu-button,
-      .refined-header .notify-button{
+      .refined-header .menu-button,.refined-header .notify-button{
         width:40px;
         height:40px;
+        border:0;
         border-radius:13px;
+        display:grid;
+        place-items:center;
         background:#f7f8fa;
+        color:#111827;
+        cursor:pointer;
       }
 
-      .refined-header .menu-button{
-        font-size:0;
-        position:relative;
-      }
-      .refined-header .menu-button::before,
-      .refined-header .menu-button::after{
+      .refined-header .menu-button{font-size:0;position:relative}
+      .refined-header .menu-button::before,.refined-header .menu-button::after{
         content:'';
         position:absolute;
         left:10px;
@@ -1331,6 +1106,24 @@ export default function Home(){
       }
       .refined-header .menu-button::before{top:14px;box-shadow:0 6px 0 #111827}
       .refined-header .menu-button::after{top:26px}
+      .refined-header .notify-button{position:relative}
+      .refined-header .notify-button i{
+        position:absolute;
+        top:-4px;
+        right:-4px;
+        min-width:18px;
+        height:18px;
+        padding:0 4px;
+        border:2px solid #fff;
+        border-radius:10px;
+        display:grid;
+        place-items:center;
+        background:#ef233c;
+        color:#fff;
+        font-size:10px;
+        font-style:normal;
+        font-weight:900;
+      }
 
       .refined-wordmark{
         min-width:0;
@@ -1340,380 +1133,160 @@ export default function Home(){
         justify-content:center;
         line-height:1;
       }
-      .refined-wordmark b,
-      .refined-wordmark strong{
-        display:inline;
-        font-size:32px!important;
-        letter-spacing:-1.9px;
-      }
-      .refined-wordmark small{
-        margin-top:6px;
-        font-size:7px!important;
-        letter-spacing:3px!important;
-        white-space:nowrap;
-        color:#111827!important;
-        opacity:.78;
-      }
+      .refined-wordmark b,.refined-wordmark strong{display:inline;font-size:32px!important;letter-spacing:-1.9px}
+      .refined-wordmark small{margin-top:6px;font-size:7px!important;letter-spacing:3px!important;white-space:nowrap;color:#111827!important;opacity:.78}
+      .refined-language{display:flex;align-items:center;justify-content:center}
+      .refined-language .lang-switcher,.refined-language [class*="language"]{transform:scale(.9);transform-origin:center}
 
-      .refined-language{
-        display:flex;
-        align-items:center;
-        justify-content:center;
+      .notifications-panel{
+        margin:0 0 12px;
+        padding:12px;
+        border:1px solid #e6e9ee;
+        border-radius:22px;
+        background:#fff;
+        box-shadow:0 16px 38px rgba(15,23,42,.18);
       }
-      .refined-language .lang-switcher,
-      .refined-language [class*="language"]{
-        transform:scale(.9);
-        transform-origin:center;
+      .notifications-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 10px}
+      .notifications-head>div{display:flex;flex-direction:column;gap:3px}
+      .notifications-head b{font-size:18px;color:#101828}
+      .notifications-head small{font-size:12px;color:#667085}
+      .notifications-head button{
+        width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;
+        background:#f1f3f6;color:#344054;font-size:24px;cursor:pointer;
       }
+      .notification-item{
+        width:100%;min-width:0;display:grid;grid-template-columns:44px minmax(0,1fr) 16px;
+        gap:10px;align-items:center;padding:11px 8px;border:0;border-top:1px solid #edf0f3;
+        background:#fff;color:#101828;text-align:left;cursor:pointer;
+      }
+      .notification-item>span{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#fff4cf;font-size:21px}
+      .notification-item>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+      .notification-item b{font-size:14px;line-height:1.2}
+      .notification-item small{font-size:12px;line-height:1.3;color:#667085}
+      .notification-item em{font-style:normal;font-size:24px;color:#98a2b3}
 
       .refined-sos{
+        width:100%;
         min-height:104px;
-        border-radius:24px!important;
+        margin:0;
         padding:17px 20px!important;
-        grid-template-columns:56px 74px 1fr 24px!important;
+        border:0;
+        border-radius:24px!important;
+        display:grid;
+        grid-template-columns:56px 74px minmax(0,1fr) 24px!important;
         gap:10px!important;
-        background:
-          radial-gradient(circle at 15% 50%,rgba(255,255,255,.13),transparent 120px),
-          linear-gradient(135deg,#ff2836 0%,#f31122 65%,#dc0715 100%)!important;
+        align-items:center;
+        background:radial-gradient(circle at 15% 50%,rgba(255,255,255,.13),transparent 120px),linear-gradient(135deg,#ff2836 0%,#f31122 65%,#dc0715 100%)!important;
         box-shadow:0 17px 32px rgba(238,18,35,.24)!important;
+        color:#fff;
+        text-align:left;
+        cursor:pointer;
       }
-      .refined-sos> b{
-        font-size:35px!important;
-        line-height:1!important;
-      }
-      .refined-sos>div{
-        min-width:0;
-        display:flex;
-        flex-direction:column;
-        gap:4px;
-      }
-      .refined-sos>div strong{
-        font-size:16px!important;
-        line-height:1.15;
-      }
-      .refined-sos>div small{
-        font-size:12px!important;
-        opacity:.9;
-      }
-      .refined-alert{
-        width:48px!important;
-        height:48px!important;
-        border-radius:15px!important;
-        font-size:28px!important;
-      }
-
-      .services-section{
-        padding:26px 14px 0!important;
-      }
-
-      .home-section-title{
-        margin-bottom:14px!important;
-      }
-      .home-section-title h2{
-        font-size:22px!important;
-        letter-spacing:-.45px;
-      }
-      .home-section-title button,
-      .home-section-title a{
-        color:#f2a900!important;
-        font-size:13px!important;
-        font-weight:900!important;
-      }
-
-      .refined-services,
-      .offer-row{
-        scrollbar-width:none;
-        -ms-overflow-style:none;
-      }
-      .refined-services::-webkit-scrollbar,
-      .offer-row::-webkit-scrollbar{
-        display:none;
-      }
-
-      .refined-services{
-        gap:12px;
-        padding:3px 1px 12px;
-      }
-      .refined-services .service-card{
-        min-width:142px!important;
-        height:172px!important;
-        border:1px solid rgba(15,23,42,.05)!important;
-        border-radius:21px!important;
-        background:
-          linear-gradient(180deg,#fff 0%,#fbfbfc 100%)!important;
-        box-shadow:
-          0 10px 24px rgba(15,23,42,.075),
-          inset 0 1px 0 rgba(255,255,255,.9)!important;
-        padding:15px 12px!important;
-      }
-      .refined-services .service-card svg{
-        width:46px!important;
-        height:46px!important;
-      }
-      .refined-services .service-card strong{
-        min-height:40px;
-        font-size:14px!important;
-        line-height:1.24!important;
-      }
-      .refined-services .service-card small{
-        margin-top:auto;
-        font-size:12px!important;
-        font-weight:800!important;
-      }
-
-      .refined-offers,
-      .refined-car-section,
-      .refined-reminders{
-        padding:0 14px!important;
-        margin-top:25px!important;
-      }
-
-      .offer-row{
-        gap:12px;
-        padding:2px 1px 10px;
-      }
-      .offer-row button{
-        min-width:224px!important;
-        height:126px!important;
-        border-radius:20px!important;
-        padding:16px!important;
-        box-shadow:0 12px 27px rgba(15,23,42,.16)!important;
-      }
-
-      .refined-car-card{
-        min-height:114px;
-        grid-template-columns:92px minmax(0,1fr) auto 16px!important;
-        border-radius:22px!important;
-        padding:14px!important;
-        box-shadow:0 10px 25px rgba(15,23,42,.075)!important;
-      }
-      .refined-car-emoji{
-        width:92px;
-        height:82px!important;
-        background:
-          linear-gradient(145deg,#f1f4f7,#fff)!important;
-        font-size:51px!important;
-      }
-      .refined-car-card>div b{
-        font-size:17px;
-      }
-      .refined-car-card>div small{
-        font-size:12px;
-      }
-      .refined-car-card>strong{
-        font-size:11px!important;
-      }
-
-      .reminder-list{
-        border-radius:22px!important;
-      }
-      .reminder-list a{
-        min-height:74px!important;
-      }
+      .refined-alert{width:48px;height:48px;border:4px solid #fff;border-radius:15px;display:grid;place-items:center;font-size:28px;font-weight:900}
+      .refined-sos>b{font-size:35px!important;line-height:1}
+      .refined-sos>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+      .refined-sos>div strong{font-size:16px!important;line-height:1.15}
+      .refined-sos>div small{font-size:12px!important;opacity:.9}
+      .refined-sos>em{justify-self:end;font-size:28px;font-style:normal}
 
       .sos-choice-panel{
-        border-radius:22px!important;
-        padding:13px!important;
+        margin-top:10px;padding:13px;border:1px solid #e6e9ee;border-radius:22px;
+        max-height:55vh;overflow-y:auto;overflow-x:hidden;background:#fff;
+        box-shadow:0 14px 34px rgba(15,23,42,.16);
       }
+      .sos-choice-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+      .sos-choice-head b{font-size:18px}
+      .sos-choice-head button{width:34px;height:34px;border:0;border-radius:50%;background:#f1f3f6;font-size:24px}
+      .sos-choice-grid{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
       .sos-choice-grid button{
-        min-height:94px!important;
-        border-radius:17px!important;
-        box-shadow:0 5px 14px rgba(15,23,42,.045);
+        width:100%;min-width:0;min-height:108px;padding:14px;border:1px solid #edf0f4;border-radius:17px;
+        display:grid;grid-template-columns:46px minmax(0,1fr) 18px;gap:10px;align-items:center;
+        overflow:hidden;background:#fff;color:#101828;text-align:left;box-shadow:0 5px 14px rgba(15,23,42,.045);
+      }
+      .sos-choice-grid button>span{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:#f7f9fc;font-size:27px}
+      .sos-choice-grid button>b{min-width:0;overflow-wrap:anywhere;font-size:15px;line-height:1.25}
+      .sos-choice-grid button>em{justify-self:end;color:#98a2b3;font-size:31px;line-height:1;font-style:normal}
+
+      .services-section{padding:26px 14px 0}
+      .home-section-title{margin-bottom:14px!important}
+      .home-section-title h2{font-size:22px!important;letter-spacing:-.45px}
+      .home-section-title button,.home-section-title a{border:0;background:transparent;color:#f2a900!important;font-size:13px!important;font-weight:900!important;text-decoration:none}
+
+      .refined-services,.offer-row{max-width:100%;display:flex;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-ms-overflow-style:none}
+      .refined-services::-webkit-scrollbar,.offer-row::-webkit-scrollbar{display:none}
+      .refined-services{padding:3px 1px 12px;scroll-snap-type:x proximity}
+      .refined-services .service-card{
+        flex:0 0 142px;min-width:142px;height:172px;padding:15px 12px!important;border:1px solid rgba(15,23,42,.05)!important;
+        border-radius:21px!important;display:flex;flex-direction:column;align-items:flex-start;
+        background:linear-gradient(180deg,#fff 0%,#fbfbfc 100%)!important;
+        box-shadow:0 10px 24px rgba(15,23,42,.075),inset 0 1px 0 rgba(255,255,255,.9)!important;
+        scroll-snap-align:start;
+      }
+      .refined-services .service-card svg{width:46px!important;height:46px!important}
+      .refined-services .service-card strong{min-height:40px;font-size:14px!important;line-height:1.24!important;text-align:left}
+      .refined-services .service-card small{margin-top:auto;font-size:12px!important;font-weight:800!important}
+      .refined-services.is-all{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+      .refined-services.is-all .service-card{width:100%;min-width:0;max-width:100%}
+
+      .refined-offers,.refined-car-section,.refined-reminders{padding:0 14px;margin-top:25px}
+      .offer-row{padding:2px 1px 10px}
+      .offer-row button{
+        flex:0 0 224px;min-width:224px;height:126px;padding:16px;border:0;border-radius:20px;
+        display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:7px;
+        color:#fff;background:linear-gradient(135deg,#121923,#313b49);box-shadow:0 12px 27px rgba(15,23,42,.16);
+      }
+      .offer-row button:nth-child(2){color:#121923;background:linear-gradient(135deg,#ffc51a,#f3a700)}
+      .offer-row button:nth-child(3){background:linear-gradient(135deg,#061d3e,#0e3e78)}
+      .offer-row span{padding:5px 8px;border-radius:8px;background:#f5222d;color:#fff;font-weight:900}
+      .offer-row b{font-size:18px}
+
+      .refined-car-card{
+        min-height:114px;padding:14px;border:1px solid #e8ebef;border-radius:22px;
+        display:grid;grid-template-columns:92px minmax(0,1fr) auto 16px;gap:11px;align-items:center;
+        background:#fff;box-shadow:0 10px 25px rgba(15,23,42,.075);color:#101828;text-decoration:none;
+      }
+      .refined-car-emoji{width:92px;height:82px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#f1f4f7,#fff);font-size:51px}
+      .refined-car-card>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+      .refined-car-card>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
+      .refined-car-card>div small{font-size:12px;color:#667085}
+      .refined-car-card>strong{padding:8px 10px;border-radius:15px;background:#e6f8e9;color:#159447;font-size:11px;white-space:nowrap}
+      .refined-car-card>em{color:#98a2b3;font-size:24px;font-style:normal}
+
+      .reminder-list{overflow:hidden;border:1px solid #e8ebef;border-radius:22px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.06)}
+      .reminder-list a{min-height:74px;padding:10px 12px;border-bottom:1px solid #edf0f3;display:grid;grid-template-columns:44px minmax(0,1fr) auto 14px;gap:10px;align-items:center;color:#101828;text-decoration:none}
+      .reminder-list a:last-child{border-bottom:0}
+      .reminder-list i{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#fff1c2;font-style:normal}
+      .reminder-list a:nth-child(2) i{background:#dcefff}.reminder-list a:nth-child(3) i{background:#dcf6df}.reminder-list a:nth-child(4) i{background:#eee5ff}
+      .reminder-list span{min-width:0;display:flex;flex-direction:column;gap:3px}.reminder-list span small{color:#667085}
+      .reminder-list strong{font-size:11px;text-align:right;white-space:nowrap}.reminder-list em{color:#98a2b3;font-style:normal;font-size:21px}
+
+      .bottom-nav,nav{max-width:100%}
+
+      @media(max-width:520px){
+        .app-shell{padding:0!important}
+        .phone{width:100%!important;max-width:100%!important;min-height:100dvh;margin:0!important;border-radius:0!important}
+        .refined-sticky,.services-section,.refined-offers,.refined-car-section,.refined-reminders{padding-left:12px!important;padding-right:12px!important}
+        .refined-header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
       }
 
       @media(max-width:420px){
-        .refined-header{
-          grid-template-columns:40px minmax(0,1fr) auto 40px!important;
-          gap:6px;
-        }
-        .refined-wordmark b,
-        .refined-wordmark strong{
-          font-size:28px!important;
-        }
-        .refined-wordmark small{
-          font-size:6px!important;
-          letter-spacing:2.4px!important;
-        }
-        .refined-language{
-          transform:scale(.86);
-          margin:0 -5px;
-        }
-        .refined-sos{
-          min-height:96px;
-          grid-template-columns:48px 64px 1fr 18px!important;
-          padding:15px 15px!important;
-        }
-        .refined-sos> b{font-size:31px!important}
-        .refined-sos>div strong{font-size:14px!important}
-        .refined-sos>div small{font-size:11px!important}
-        .refined-services .service-card{
-          min-width:136px!important;
-          height:166px!important;
-        }
-        .refined-car-card{
-          grid-template-columns:78px minmax(0,1fr) 14px!important;
-        }
-        .refined-car-emoji{
-          width:78px;
-          height:72px!important;
-          font-size:44px!important;
-        }
-      }
-
-      /* JolDos SOS and mobile stability patch */
-      html,
-      body{
-        width:100%;
-        max-width:100%;
-        overflow-x:hidden!important;
-        overscroll-behavior-x:none;
-      }
-
-      *{
-        box-sizing:border-box;
-      }
-
-      .app-shell,
-      .phone,
-      .home-screen,
-      .refined-home,
-      .refined-sticky,
-      .sos-choice-panel,
-      .services-section,
-      .refined-offers,
-      .refined-car-section,
-      .refined-reminders{
-        width:100%;
-        max-width:100%;
-        min-width:0;
-      }
-
-      .app-shell{
-        overflow-x:hidden!important;
-      }
-
-      .phone{
-        overflow-x:hidden!important;
-        touch-action:pan-y;
-      }
-
-      .refined-home{
-        overflow-x:hidden!important;
-        overscroll-behavior-x:none;
-        touch-action:pan-y;
-      }
-
-      .refined-sticky{
-        left:0;
-        right:0;
-        overflow:visible;
-      }
-
-      .sos-choice-panel{
-        overflow-x:hidden!important;
-        margin-left:0!important;
-        margin-right:0!important;
-      }
-
-      .sos-choice-grid{
-        width:100%;
-        grid-template-columns:repeat(2,minmax(0,1fr))!important;
-        gap:10px!important;
-      }
-
-      .sos-choice-grid button{
-        width:100%;
-        min-width:0!important;
-        max-width:100%;
-        min-height:108px!important;
-        display:grid!important;
-        grid-template-columns:46px minmax(0,1fr) 18px;
-        align-items:center!important;
-        gap:10px!important;
-        padding:14px!important;
-        overflow:hidden;
-      }
-
-      .sos-choice-grid button>span{
-        width:46px;
-        height:46px;
-        display:grid;
-        place-items:center;
-        border-radius:14px;
-        background:#f7f9fc;
-        font-size:27px!important;
-      }
-
-      .sos-choice-grid button>b{
-        min-width:0;
-        overflow-wrap:anywhere;
-        word-break:normal;
-        hyphens:auto;
-        font-size:15px!important;
-        line-height:1.25!important;
-      }
-
-      .sos-choice-grid button>em{
-        color:#98a2b3;
-        font-size:31px;
-        line-height:1;
-        font-style:normal;
-        justify-self:end;
-      }
-
-      .refined-services,
-      .offer-row{
-        max-width:100%;
-        overscroll-behavior-x:contain;
-      }
-
-      .refined-services .service-card,
-      .offer-row button{
-        flex-shrink:0;
-      }
-
-      .bottom-nav,
-      nav{
-        max-width:100%;
-      }
-
-      @media(max-width:520px){
-        .app-shell{
-          padding:0!important;
-        }
-
-        .phone{
-          width:100%!important;
-          max-width:100%!important;
-          min-height:100dvh;
-          border-radius:0!important;
-          margin:0!important;
-        }
-
-        .refined-sticky{
-          padding-left:12px!important;
-          padding-right:12px!important;
-        }
-
-        .services-section,
-        .refined-offers,
-        .refined-car-section,
-        .refined-reminders{
-          padding-left:12px!important;
-          padding-right:12px!important;
-        }
+        .refined-header{grid-template-columns:40px minmax(0,1fr) auto 40px!important;gap:6px}
+        .refined-wordmark b,.refined-wordmark strong{font-size:28px!important}
+        .refined-wordmark small{font-size:6px!important;letter-spacing:2.4px!important}
+        .refined-language{transform:scale(.86);margin:0 -5px}
+        .refined-sos{min-height:96px;padding:15px!important;grid-template-columns:48px 64px minmax(0,1fr) 18px!important}
+        .refined-sos>b{font-size:31px!important}.refined-sos>div strong{font-size:14px!important}.refined-sos>div small{font-size:11px!important}
+        .refined-services .service-card{flex-basis:136px;min-width:136px;height:166px}
+        .refined-car-card{grid-template-columns:78px minmax(0,1fr) 14px}
+        .refined-car-emoji{width:78px;height:72px;font-size:44px}
+        .refined-car-card>strong{grid-column:2;justify-self:start}.refined-car-card>em{grid-column:3;grid-row:1/3}
+        .reminder-list strong{display:none}
       }
 
       @media(max-width:380px){
-        .sos-choice-grid{
-          grid-template-columns:1fr!important;
-        }
-
-        .sos-choice-grid button{
-          min-height:82px!important;
-        }
+        .sos-choice-grid{grid-template-columns:1fr}
+        .sos-choice-grid button{min-height:82px}
       }
-
     `}</style>
   </main>
 }
