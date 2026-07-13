@@ -344,8 +344,7 @@ export default function Home(){
   function goBackInsideClient(){
     setNotificationsOpen(false)
     setSosOpen(false)
-    setTab('home')
-    setStage('start')
+    setRoleMenuOpen(value=>!value)
   }
 
   function toggleNotifications(){
@@ -1187,7 +1186,34 @@ export default function Home(){
   const isHomeStart=tab==='home'&&stage==='start'
   return <main className="app-shell">
     <div className={`phone ${isHomeStart?'home-phone':''}`}>
-      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="master-shortcut" aria-label={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} title={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} onClick={openMasterApp}>M</button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
+      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={lang==='kk'?'Қосымшаны таңдау':lang==='en'?'Choose application':'Выбрать приложение'} title={lang==='kk'?'Қосымшаны таңдау':lang==='en'?'Choose application':'Выбрать приложение'} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="master-shortcut" aria-label={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} title={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} onClick={openMasterApp}>M</button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
+      {!isHomeStart&&roleMenuOpen&&(
+        <div className="role-switch-overlay" role="presentation" onClick={()=>setRoleMenuOpen(false)}>
+          <section className="role-switch-dialog" role="dialog" aria-modal="true" aria-label={tx('roleBack')} onClick={event=>event.stopPropagation()}>
+            <div className="role-switch-head">
+              <button type="button" onClick={()=>setRoleMenuOpen(false)} aria-label={lang==='kk'?'Жабу':lang==='en'?'Close':'Закрыть'}>×</button>
+              <div>
+                <b>{lang==='kk'?'Қосымшаны таңдаңыз':lang==='en'?'Choose application':'Выберите приложение'}</b>
+                <small>{lang==='kk'?'Белсенді тапсырыс сақталады':lang==='en'?'The active order will remain saved':'Активный заказ останется сохранённым'}</small>
+              </div>
+            </div>
+            <div className="role-switch-grid">
+              <button type="button" className="active" onClick={openDriverApp}>
+                <span>🚗</span><div><b>{lang==='kk'?'Жүргізуші':lang==='en'?'Driver':'Водитель'}</b><small>{lang==='kk'?'Ағымдағы қосымша':lang==='en'?'Current application':'Текущее приложение'}</small></div><em>✓</em>
+              </button>
+              <button type="button" onClick={openMasterApp}>
+                <span>🛠️</span><div><b>{lang==='kk'?'Шебер':lang==='en'?'Master':'Мастер'}</b><small>{lang==='kk'?'Тапсырысты қабылдау және аяқтау':lang==='en'?'Accept and complete the order':'Принять и завершить заказ'}</small></div><em>›</em>
+              </button>
+              <button type="button" onClick={openStationApp}>
+                <span>🏢</span><div><b>{lang==='kk'?'СТО':lang==='en'?'Service station':'СТО'}</b><small>{lang==='kk'?'Ұйым кабинеті':lang==='en'?'Organization account':'Кабинет организации'}</small></div><em>›</em>
+              </button>
+              <button type="button" onClick={switchRole}>
+                <span>↔</span><div><b>{tx('roleBack')}</b><small>{lang==='kk'?'Барлық тест аккаунттары':lang==='en'?'All test accounts':'Все тестовые аккаунты'}</small></div><em>›</em>
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {renderTab()}
       <BottomNav tab={tab} onChange={setTab} lang={lang}/>
       <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
@@ -1317,6 +1343,29 @@ export default function Home(){
       .refined-wordmark small{margin-top:6px;font-size:7px!important;letter-spacing:3px!important;white-space:nowrap;color:#111827!important;opacity:.78}
       .refined-language{display:flex;align-items:center;justify-content:center}
       .refined-language .lang-switcher,.refined-language [class*="language"]{transform:scale(.9);transform-origin:center}
+
+      .role-switch-overlay{
+        position:absolute;
+        inset:0;
+        z-index:120;
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        padding:72px 14px 18px;
+        background:rgba(3,14,29,.58);
+        backdrop-filter:blur(5px);
+      }
+      .role-switch-dialog{
+        width:100%;
+        max-width:390px;
+        max-height:calc(100% - 12px);
+        overflow-y:auto;
+        border:1px solid rgba(255,255,255,.55);
+        border-radius:22px;
+        padding:14px;
+        background:#fff;
+        box-shadow:0 24px 60px rgba(2,12,27,.28);
+      }
 
       .role-switch-panel{
         margin-top:10px;padding:14px;border:1px solid #e5eaf0;border-radius:20px;background:#fff;
