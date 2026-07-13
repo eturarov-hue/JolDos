@@ -400,6 +400,18 @@ export default function Home(){
 
   const homeServices=SERVICE_LIST
 
+  function serviceDisplayTitle(service:ServiceDefinition){
+    if(service.id==='wheel_change'){
+      return lang==='kk'
+        ? 'Дөңгелекке көмек'
+        : lang==='en'
+          ? 'Wheel assistance'
+          : 'Помощь с колесом'
+    }
+
+    return service.title[lang]
+  }
+
   function StartScreen(){
     const popularIds=[
       'jump_start',
@@ -413,28 +425,68 @@ export default function Home(){
       .map(id=>getService(id))
       .filter((service):service is ServiceDefinition=>Boolean(service))
 
+    const visibleServices=showAllServices
+      ? SERVICE_LIST
+      : popularServices
+
     const activeCar=cars[0]||null
 
-    const serviceImages:Record<string,string>={
-      jump_start:'/joldos-home/battery.webp',
-      wheel_change:'/joldos-home/wheel.webp',
-      tow:'/joldos-home/tow.webp',
-      fuel_delivery:'/joldos-home/fuel.webp',
-      car_unlock:'/joldos-home/unlock.webp',
-    }
-
     const sosItems=[
-      {icon:'🌡️',title:{ru:'Перегрев двигателя',kk:'Қозғалтқыш қызып кетті',en:'Engine overheating'},serviceId:'road_assistance'},
-      {icon:'🛞',title:{ru:'Спущено колесо',kk:'Дөңгелек жарылды',en:'Flat tire'},serviceId:'wheel_change'},
-      {icon:'🔋',title:{ru:'Разрядился аккумулятор',kk:'Аккумулятор отырды',en:'Dead battery'},serviceId:'jump_start'},
-      {icon:'🔑',title:{ru:'Ключи остались в салоне',kk:'Кілт салонда қалды',en:'Keys locked inside'},serviceId:'car_unlock'},
-      {icon:'⛽',title:{ru:'Закончилось топливо',kk:'Жанармай таусылды',en:'Out of fuel'},serviceId:'fuel_delivery'},
-      {icon:'💧',title:{ru:'Нет охлаждающей жидкости',kk:'Салқындатқыш сұйықтық жоқ',en:'No coolant'},serviceId:'road_assistance'},
-      {icon:'🛢️',title:{ru:'Утечка масла',kk:'Май ағып жатыр',en:'Oil leak'},serviceId:'road_assistance'},
-      {icon:'⚠️',title:{ru:'Не заводится после ДТП или удара',kk:'Соққыдан кейін оталмайды',en:'Will not start after impact'},serviceId:'tow'},
-      {icon:'🚙',title:{ru:'Автомобиль застрял',kk:'Көлік тұрып қалды',en:'Vehicle is stuck'},serviceId:'tow'},
-      {icon:'🔥',title:{ru:'Дым или запах гари',kk:'Түтін немесе күйік иісі',en:'Smoke or burning smell'},serviceId:'road_assistance'},
-      {icon:'🛑',title:{ru:'Тормоза или рулевое управление',kk:'Тежегіш немесе руль ақауы',en:'Brake or steering problem'},serviceId:'tow'},
+      {
+        icon:'🌡️',
+        title:{ru:'Двигатель перегрелся',kk:'Қозғалтқыш қызып кетті',en:'Engine overheated'},
+        serviceId:'road_assistance',
+      },
+      {
+        icon:'🛞',
+        title:{ru:'Спущено или повреждено колесо',kk:'Дөңгелек жарылды немесе зақымдалды',en:'Flat or damaged tire'},
+        serviceId:'wheel_change',
+      },
+      {
+        icon:'🔋',
+        title:{ru:'Разрядился аккумулятор',kk:'Аккумулятор отырды',en:'Dead battery'},
+        serviceId:'jump_start',
+      },
+      {
+        icon:'🔑',
+        title:{ru:'Ключи заперты в салоне',kk:'Кілт салонда құлыптаулы қалды',en:'Keys locked inside'},
+        serviceId:'car_unlock',
+      },
+      {
+        icon:'⛽',
+        title:{ru:'Закончилось топливо',kk:'Жанармай таусылды',en:'Out of fuel'},
+        serviceId:'fuel_delivery',
+      },
+      {
+        icon:'💧',
+        title:{ru:'Закончилась охлаждающая жидкость',kk:'Салқындатқыш сұйықтық таусылды',en:'Coolant ran out'},
+        serviceId:'road_assistance',
+      },
+      {
+        icon:'🛢️',
+        title:{ru:'Утечка масла',kk:'Май ағып жатыр',en:'Oil leak'},
+        serviceId:'road_assistance',
+      },
+      {
+        icon:'⚠️',
+        title:{ru:'Не заводится после ДТП или удара',kk:'Соққыдан кейін оталмайды',en:'Will not start after impact'},
+        serviceId:'tow',
+      },
+      {
+        icon:'🚙',
+        title:{ru:'Автомобиль застрял',kk:'Көлік тұрып қалды',en:'Vehicle is stuck'},
+        serviceId:'tow',
+      },
+      {
+        icon:'🔥',
+        title:{ru:'Дым или запах гари',kk:'Түтін немесе күйік иісі',en:'Smoke or burning smell'},
+        serviceId:'road_assistance',
+      },
+      {
+        icon:'🛑',
+        title:{ru:'Проблема с тормозами или рулём',kk:'Тежегіш немесе руль ақауы',en:'Brake or steering problem'},
+        serviceId:'tow',
+      },
     ] as const
 
     const chooseSos=(serviceId:string)=>{
@@ -442,124 +494,243 @@ export default function Home(){
       openService(serviceId)
     }
 
-    return <div className="jd-home">
-      <header className="jd-header">
-        <button type="button" className="jd-menu" aria-label="Меню" onClick={()=>setTab('profile')}>
-          <span/><span/><span/>
-        </button>
+    return <div className="home-screen refined-home">
+      <div className="refined-sticky">
+        <header className="home-header refined-header">
+          <button
+            type="button"
+            className="menu-button"
+            aria-label="Меню"
+            onClick={()=>setTab('profile')}
+          >
+            ☰
+          </button>
 
-        <button type="button" className="jd-logo" onClick={()=>setTab('home')}>
-          JolDos
-        </button>
+          <div className="wordmark refined-wordmark">
+            <b>Jol</b><strong>Dos</strong>
+            <small>
+              {lang==='kk'
+                ? 'ЖОЛДАҒЫ КӨМЕК'
+                : lang==='en'
+                  ? 'ROADSIDE ASSISTANCE'
+                  : 'ПОМОЩЬ НА ДОРОГЕ'}
+            </small>
+          </div>
 
-        <div className="jd-header-actions">
-          <LanguageSwitcher lang={lang} onChange={setLang} compact/>
-          <button type="button" className="jd-bell" aria-label={tx('notifications')} onClick={()=>notify(tx('notifications'))}>
+          <div className="refined-language">
+            <LanguageSwitcher
+              lang={lang}
+              onChange={setLang}
+              compact
+            />
+          </div>
+
+          <button
+            type="button"
+            className="notify-button"
+            aria-label={tx('notifications')}
+            onClick={()=>notify(tx('notifications'))}
+          >
             <BellIcon/><i>3</i>
           </button>
-        </div>
-      </header>
+        </header>
 
-      <button type="button" className="jd-sos" onClick={()=>setSosOpen(value=>!value)} aria-expanded={sosOpen}>
-        <span className="jd-sos-triangle"><b>!</b></span>
-        <span className="jd-sos-copy">
-          <strong>SOS</strong>
-          <small>{lang==='kk'?'Жолда шұғыл көмек керек пе?':lang==='en'?'Need urgent roadside assistance?':'Нужна срочная помощь на дороге?'}</small>
-        </span>
-        <em>{sosOpen?'⌃':'›'}</em>
-      </button>
-
-      {sosOpen&&<div className="jd-sos-panel">
-        <div className="jd-sos-panel-head">
-          <b>{lang==='kk'?'Не болды?':lang==='en'?'What happened?':'Что случилось?'}</b>
-          <button type="button" onClick={()=>setSosOpen(false)}>×</button>
-        </div>
-        <div className="jd-sos-grid">
-          {sosItems.map(item=><button type="button" key={item.title.ru} onClick={()=>chooseSos(item.serviceId)}>
-            <span>{item.icon}</span><b>{item.title[lang]}</b><em>›</em>
-          </button>)}
-        </div>
-      </div>}
-
-      <section className="jd-section">
-        <div className="jd-title-row">
-          <h2>{lang==='kk'?'Танымал қызметтер':lang==='en'?'Popular services':'Популярные услуги'}</h2>
-          <button type="button" onClick={()=>setShowAllServices(true)}>
-            {lang==='kk'?'Барлығын көру':lang==='en'?'See all':'Смотреть все'} <b>›</b>
-          </button>
-        </div>
-
-        <div className="jd-services">
-          {popularServices.map(service=><button type="button" key={service.id} onClick={()=>openService(service.id)}>
-            <span className="jd-service-image">
-              <img src={serviceImages[service.id]} alt="" />
-            </span>
-            <strong>{service.title[lang]}</strong>
-          </button>)}
-        </div>
-
-        <button type="button" className="jd-all-services" onClick={()=>setShowAllServices(value=>!value)}>
-          <span className="jd-grid-icon"><i/><i/><i/><i/></span>
-          <span>
-            <strong>{lang==='kk'?'Барлық қызметтер':lang==='en'?'All services':'Все услуги'}</strong>
-            <small>{lang==='kk'?'Көлігіңізге арналған қызметтердің толық тізімі':lang==='en'?'Complete service list for your car':'Полный список услуг для вашего авто'}</small>
-          </span>
-          <b>›</b>
+        <button
+          type="button"
+          className="home-sos refined-sos"
+          onClick={()=>setSosOpen(value=>!value)}
+          aria-expanded={sosOpen}
+        >
+          <span className="refined-alert">!</span>
+          <b>SOS</b>
+          <div>
+            <strong>
+              {lang==='kk'
+                ? 'Шұғыл көмек'
+                : lang==='en'
+                  ? 'Urgent roadside help'
+                  : 'Экстренная помощь'}
+            </strong>
+            <small>
+              {lang==='kk'
+                ? 'Жағдайды таңдаңыз'
+                : lang==='en'
+                  ? 'Choose what happened'
+                  : 'Выберите, что случилось'}
+            </small>
+          </div>
+          <em>{sosOpen?'⌃':'›'}</em>
         </button>
 
-        {showAllServices&&<div className="jd-catalog">
-          {SERVICE_LIST.map(service=><button type="button" key={service.id} onClick={()=>openService(service.id)}>
-            <ServiceIcon id={service.id}/><span>{service.title[lang]}</span><b>›</b>
-          </button>)}
-        </div>}
-      </section>
+        {sosOpen&&(
+          <div className="sos-choice-panel">
+            <div className="sos-choice-head">
+              <b>
+                {lang==='kk'
+                  ? 'Не болды?'
+                  : lang==='en'
+                    ? 'What happened?'
+                    : 'Что случилось?'}
+              </b>
+              <button type="button" onClick={()=>setSosOpen(false)}>×</button>
+            </div>
 
-      <section className="jd-section">
-        <div className="jd-title-row">
-          <h2>{lang==='kk'?'Акциялар мен жеңілдіктер':lang==='en'?'Offers and discounts':'Акции и скидки'}</h2>
-          <button type="button" onClick={()=>notify(lang==='kk'?'Акциялар':lang==='en'?'Offers':'Акции')}>
-            {lang==='kk'?'Барлығын көру':lang==='en'?'See all':'Смотреть все'} <b>›</b>
+            <div className="sos-choice-grid">
+              {sosItems.map(item=>(
+                <button
+                  type="button"
+                  key={item.title.ru}
+                  onClick={()=>chooseSos(item.serviceId)}
+                >
+                  <span>{item.icon}</span>
+                  <b>{item.title[lang]}</b>
+                  <em aria-hidden="true">›</em>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <section className="services-section">
+        <div className="home-section-title">
+          <h2>
+            {lang==='kk'
+              ? 'Танымал қызметтер'
+              : lang==='en'
+                ? 'Popular services'
+                : 'Популярные услуги'}
+          </h2>
+
+          <button
+            type="button"
+            onClick={()=>setShowAllServices(value=>!value)}
+          >
+            {showAllServices
+              ? (lang==='kk'?'Қысқарту':lang==='en'?'Collapse':'Свернуть')
+              : (lang==='kk'?'Барлық қызметтер':lang==='en'?'All services':'Все услуги')}
+            {' ›'}
           </button>
         </div>
 
-        <div className="jd-promos">
-          <button type="button" onClick={()=>openService('road_assistance')}><img src="/joldos-home/promo-oil.webp" alt="Замена масла со скидкой"/></button>
-          <button type="button" onClick={()=>openService('tow')}><img src="/joldos-home/promo-tow.webp" alt="Эвакуатор со скидкой"/></button>
-          <button type="button" onClick={()=>openService('wheel_change')}><img src="/joldos-home/promo-tire.webp" alt="Шиномонтаж со скидкой"/></button>
+        <div className={`service-grid refined-services ${showAllServices?'is-all':''}`}>
+          {visibleServices.map(service=>(
+            <button
+              type="button"
+              key={service.id}
+              className="service-card"
+              onClick={()=>openService(service.id)}
+            >
+              <ServiceIcon id={service.id}/>
+              <strong>{serviceDisplayTitle(service)}</strong>
+              <small>
+                {service.priceFrom===null
+                  ? '—'
+                  : `${lang==='en'?'from':'от'} ${service.priceFrom.toLocaleString('ru-RU')} ₸`}
+              </small>
+            </button>
+          ))}
         </div>
-        <div className="jd-dots"><i className="active"/><i/><i/><i/></div>
       </section>
 
-      <section className="jd-section">
-        <div className="jd-title-row">
-          <h2>{tx('cars')}</h2>
-          <Link href="/client/car">{lang==='kk'?'Қосу':lang==='en'?'Add':'Добавить'} <b>＋</b></Link>
+      <section className="refined-offers">
+        <div className="home-section-title">
+          <h2>
+            {lang==='kk'
+              ? 'Акциялар мен жеңілдіктер'
+              : lang==='en'
+                ? 'Offers and discounts'
+                : 'Акции и скидки'}
+          </h2>
         </div>
 
-        <Link href="/client/car" className="jd-car-card">
-          <span className="jd-car-image"><img src="/joldos-home/car.webp" alt="Toyota Prado"/></span>
-          <span className="jd-car-data">
-            <strong>{activeCar?`${activeCar.make} ${activeCar.model}`:'Toyota Prado'}</strong>
-            <small className="jd-plate">🇰🇿 {activeCar?.plate||'KZ 123 ABC 02'}</small>
-            <small>{lang==='kk'?'Жүріс':lang==='en'?'Mileage':'Пробег'}: {Number(activeCar?.mileage||124500).toLocaleString('ru-RU')} км</small>
-          </span>
-          <span className="jd-health"><i>✓</i>{lang==='kk'?'Бәрі жақсы':lang==='en'?'All good':'Всё хорошо'}</span>
+        <div className="offer-row">
+          <button type="button" onClick={()=>openService('road_assistance')}>
+            <span>-20%</span>
+            <b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b>
+          </button>
+          <button type="button" onClick={()=>openService('tow')}>
+            <span>-15%</span>
+            <b>{lang==='kk'?'Эвакуатор':lang==='en'?'Tow truck':'Эвакуатор'}</b>
+          </button>
+          <button type="button" onClick={()=>openService('wheel_change')}>
+            <span>-10%</span>
+            <b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b>
+          </button>
+        </div>
+      </section>
+
+      <section className="refined-car-section">
+        <div className="home-section-title">
+          <h2>{tx('cars')}</h2>
+          <Link href="/client/car">
+            {activeCar
+              ? (lang==='kk'?'Барлығын көру':lang==='en'?'View all':'Смотреть все')
+              : (lang==='kk'?'Қосу':lang==='en'?'Add':'Добавить')}
+            {' ›'}
+          </Link>
+        </div>
+
+        <Link href="/client/car" className="refined-car-card">
+          <span className="refined-car-emoji">🚙</span>
+
+          <div>
+            <b>
+              {activeCar
+                ? `${activeCar.make} ${activeCar.model}`
+                : 'Toyota Prado'}
+            </b>
+            <small>{activeCar?.plate||'KZ 123 ABC 02'}</small>
+            <small>
+              {lang==='kk'?'Жүріс':lang==='en'?'Mileage':'Пробег'}:
+              {' '}
+              {Number(activeCar?.mileage||124500).toLocaleString('ru-RU')} км
+            </small>
+          </div>
+
+          <strong>
+            ✓ {lang==='kk'?'Бәрі жақсы':lang==='en'?'All good':'Всё хорошо'}
+          </strong>
+
           <em>›</em>
         </Link>
-        <div className="jd-dots"><i className="active"/><i/><i/></div>
       </section>
 
-      <section className="jd-section jd-reminder-section">
-        <div className="jd-title-row">
-          <h2>{lang==='kk'?'Еске салғыштар':lang==='en'?'Reminders':'Напоминания'}</h2>
-          <Link href="/client/car">{lang==='kk'?'Барлығын көру':lang==='en'?'See all':'Смотреть все'} <b>›</b></Link>
+      <section className="refined-reminders">
+        <div className="home-section-title">
+          <h2>
+            {lang==='kk'
+              ? 'Еске салғыштар'
+              : lang==='en'
+                ? 'Reminders'
+                : 'Напоминания'}
+          </h2>
+          <Link href="/client/car">
+            {lang==='kk'?'Барлығын көру':lang==='en'?'View all':'Смотреть все'} ›
+          </Link>
         </div>
 
-        <div className="jd-reminders">
-          <Link href="/client/car"><i className="oil">🛢️</i><span><b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b><small>{lang==='kk'?'1 200 км кейін':lang==='en'?'in 1,200 km':'через 1 200 км'}</small><u><em/></u></span><strong>≈ 20 дней<small>или 15.06.2024</small></strong><b>›</b></Link>
-          <Link href="/client/car"><i className="insurance">🛡️</i><span><b>{lang==='kk'?'Сақтандыру':lang==='en'?'Insurance':'Страховка'}</b><small>{lang==='kk'?'9 күннен кейін':lang==='en'?'in 9 days':'через 9 дней'}</small></span><strong>до 20.05.2024</strong><b>›</b></Link>
-          <Link href="/client/car"><i className="battery">🔋</i><span><b>{lang==='kk'?'Аккумулятор':lang==='en'?'Battery':'Аккумулятор'}</b><small>{lang==='kk'?'Кепілдік 14 ай':lang==='en'?'14-month warranty':'Гарантия 14 месяцев'}</small></span><strong>до 10.06.2025</strong><b>›</b></Link>
-          <Link href="/client/car"><i className="tire">🛞</i><span><b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b><small>{lang==='kk'?'3 500 км кейін':lang==='en'?'in 3,500 km':'через 3 500 км'}</small></span><strong>≈ 45 дней<small>или 10.07.2024</small></strong><b>›</b></Link>
+        <div className="reminder-list">
+          <Link href="/client/car">
+            <i>🛢️</i>
+            <span><b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b><small>{lang==='kk'?'1 200 км кейін':lang==='en'?'in 1,200 km':'через 1 200 км'}</small></span>
+            <strong>≈ 20 дней</strong><em>›</em>
+          </Link>
+          <Link href="/client/car">
+            <i>🛡️</i>
+            <span><b>{lang==='kk'?'Сақтандыру':lang==='en'?'Insurance':'Страховка'}</b><small>{lang==='kk'?'9 күннен кейін':lang==='en'?'in 9 days':'через 9 дней'}</small></span>
+            <strong>до 20.05</strong><em>›</em>
+          </Link>
+          <Link href="/client/car">
+            <i>🔋</i>
+            <span><b>{lang==='kk'?'Аккумулятор':lang==='en'?'Battery':'Аккумулятор'}</b><small>{lang==='kk'?'Кепілдік 14 ай':lang==='en'?'14-month warranty':'Гарантия 14 месяцев'}</small></span>
+            <strong>до 10.06</strong><em>›</em>
+          </Link>
+          <Link href="/client/car">
+            <i>🛞</i>
+            <span><b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b><small>{lang==='kk'?'3 500 км кейін':lang==='en'?'in 3,500 km':'через 3 500 км'}</small></span>
+            <strong>≈ 45 дней</strong><em>›</em>
+          </Link>
         </div>
       </section>
     </div>
@@ -817,81 +988,732 @@ export default function Home(){
     </div>
 
     <style jsx global>{`
-      .home-phone{max-width:520px!important;background:#fff!important}
-      .jd-home{height:100%;overflow-y:auto;padding:0 16px 112px;background:#fff;color:#0a142b;scrollbar-width:none}
-      .jd-home::-webkit-scrollbar{display:none}
-      .jd-header{height:92px;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px}
-      .jd-menu,.jd-bell,.jd-logo{border:0;background:transparent;cursor:pointer}
-      .jd-menu{width:44px;height:44px;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:8px}
-      .jd-menu span{display:block;width:29px;height:3px;border-radius:3px;background:#101010}
-      .jd-logo{justify-self:center;font-size:35px;font-weight:900;letter-spacing:-2px;color:#09142c}
-      .jd-header-actions{display:flex;align-items:center;gap:5px}
-      .jd-header-actions .lang-switcher{transform:scale(.82);transform-origin:right center}
-      .jd-bell{position:relative;width:42px;height:42px;display:grid;place-items:center;color:#111}
-      .jd-bell svg{width:29px;height:29px}
-      .jd-bell i{position:absolute;top:0;right:-1px;width:23px;height:23px;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;background:#ef2c2d;color:#fff;font:700 12px/1 Arial}
-      .jd-sos{width:100%;min-height:126px;padding:20px 24px;display:grid;grid-template-columns:75px 1fr 34px;align-items:center;gap:17px;border:0;border-radius:18px;background:linear-gradient(135deg,#ef2927,#f20f12);color:#fff;text-align:left;box-shadow:0 14px 30px rgba(235,36,39,.22);cursor:pointer}
-      .jd-sos-triangle{width:70px;height:64px;display:grid;place-items:end center;background:#fff;clip-path:polygon(50% 0,100% 100%,0 100%);padding-bottom:7px}
-      .jd-sos-triangle b{color:#ef2024;font-size:42px;line-height:1}
-      .jd-sos-copy{display:flex;flex-direction:column;gap:9px}
-      .jd-sos-copy strong{font-size:32px;line-height:1;font-weight:900}
-      .jd-sos-copy small{font-size:15px;font-weight:600}
-      .jd-sos>em{font-style:normal;font-size:45px;font-weight:300}
-      .jd-sos-panel{margin-top:12px;padding:14px;border:1px solid #e8ebef;border-radius:20px;background:#fff;box-shadow:0 15px 35px rgba(15,23,42,.15)}
-      .jd-sos-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:18px}
-      .jd-sos-panel-head button{width:34px;height:34px;border:0;border-radius:50%;background:#f1f3f6;font-size:24px}
-      .jd-sos-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-      .jd-sos-grid button{min-height:76px;padding:10px;display:grid;grid-template-columns:34px 1fr 14px;align-items:center;gap:8px;border:1px solid #edf0f4;border-radius:15px;background:#fff;color:#0a142b;text-align:left}
-      .jd-sos-grid span{font-size:24px}.jd-sos-grid b{font-size:13px;line-height:1.25}.jd-sos-grid em{font-style:normal;color:#8b95a7;font-size:20px}
-      .jd-section{margin-top:30px}
-      .jd-title-row{display:flex;align-items:center;justify-content:space-between;margin:0 2px 16px}
-      .jd-title-row h2{margin:0;font-size:22px;line-height:1.2;letter-spacing:-.45px}
-      .jd-title-row button,.jd-title-row a{border:0;background:transparent;color:#0764ef;font-size:15px;text-decoration:none;cursor:pointer}
-      .jd-title-row b{font-size:24px;vertical-align:-2px}
-      .jd-services{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}
-      .jd-services::-webkit-scrollbar,.jd-promos::-webkit-scrollbar{display:none}
-      .jd-services>button{flex:0 0 132px;height:215px;padding:14px 11px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border:1px solid #eef1f5;border-radius:20px;background:#fff;color:#0a142b;box-shadow:0 9px 24px rgba(15,23,42,.09);cursor:pointer}
-      .jd-service-image{height:125px;width:100%;display:grid;place-items:center}
-      .jd-service-image img{max-width:122px;max-height:118px;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(15,23,42,.15))}
-      .jd-services strong{min-height:54px;display:grid;place-items:center;font-size:17px;line-height:1.35;text-align:center}
-      .jd-all-services{width:100%;min-height:100px;margin-top:10px;padding:18px 20px;display:grid;grid-template-columns:51px 1fr 24px;align-items:center;gap:15px;border:1px solid #edf0f4;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.08);color:#0a142b;text-align:left;cursor:pointer}
-      .jd-grid-icon{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:45px;height:45px}
-      .jd-grid-icon i{border:4px solid #1469ed;border-radius:7px}
-      .jd-all-services>span:nth-child(2){display:flex;flex-direction:column;gap:6px}
-      .jd-all-services strong{font-size:20px}.jd-all-services small{font-size:14px;color:#7c8699}.jd-all-services>b{color:#0764ef;font-size:35px}
-      .jd-catalog{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      .jd-catalog button{min-height:76px;padding:12px;display:grid;grid-template-columns:43px 1fr 12px;align-items:center;gap:8px;border:1px solid #e8edf3;border-radius:15px;background:#fff;text-align:left;color:#101828}
-      .jd-catalog svg{width:42px;height:42px}.jd-catalog span{font-weight:700}.jd-catalog b{color:#8b95a7}
-      .jd-promos{display:flex;gap:10px;overflow-x:auto;padding:2px 0 10px;scroll-snap-type:x mandatory}
-      .jd-promos button{flex:0 0 264px;height:178px;padding:0;border:0;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 8px 20px rgba(15,23,42,.12);scroll-snap-align:start;cursor:pointer}
-      .jd-promos img{width:100%;height:100%;object-fit:cover;display:block}
-      .jd-dots{display:flex;justify-content:center;gap:8px;margin-top:7px}.jd-dots i{width:9px;height:9px;border-radius:50%;background:#d0d5dc}.jd-dots .active{background:#1268ee}
-      .jd-car-card{min-height:168px;padding:12px 16px;display:grid;grid-template-columns:245px minmax(0,1fr) auto 17px;align-items:center;gap:12px;border:1px solid #edf0f4;border-radius:18px;background:#fff;color:#0a142b;text-decoration:none;box-shadow:0 8px 24px rgba(15,23,42,.08)}
-      .jd-car-image{height:140px;display:grid;place-items:center}.jd-car-image img{width:240px;max-height:138px;object-fit:contain;filter:drop-shadow(0 10px 8px rgba(15,23,42,.14))}
-      .jd-car-data{display:flex;min-width:0;flex-direction:column;gap:9px}.jd-car-data strong{font-size:21px}.jd-car-data small{font-size:14px;color:#7b8598}.jd-plate{width:max-content;padding:3px 6px;border-radius:5px;background:#eef1f5!important;color:#101828!important}
-      .jd-health{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:999px;background:#e4f8e8;color:#15a243;font-size:14px;white-space:nowrap}.jd-health i{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:#16b74b;color:#fff;font-style:normal;font-weight:900}
-      .jd-car-card>em{font-style:normal;color:#9099a8;font-size:31px}
-      .jd-reminder-section{margin-bottom:10px}
-      .jd-reminders{overflow:hidden;border:1px solid #edf0f4;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.08)}
-      .jd-reminders>a{min-height:87px;padding:10px 16px;display:grid;grid-template-columns:56px minmax(0,1fr) auto 16px;align-items:center;gap:14px;border-bottom:1px solid #e9edf2;color:#0a142b;text-decoration:none}.jd-reminders>a:last-child{border-bottom:0}
-      .jd-reminders>a>i{width:52px;height:52px;display:grid;place-items:center;border-radius:15px;background:#ffe08b;font-style:normal;font-size:28px}.jd-reminders>a>i.insurance{background:#d8efff}.jd-reminders>a>i.battery{background:#d9f8df}.jd-reminders>a>i.tire{background:#eee4ff}
-      .jd-reminders>a>span{display:flex;flex-direction:column;gap:4px}.jd-reminders>a>span>b{font-size:16px}.jd-reminders>a>span>small{font-size:13px;color:#7e8798}.jd-reminders u{width:100%;max-width:220px;height:7px;border-radius:999px;background:#d9dde2;text-decoration:none;overflow:hidden}.jd-reminders u em{display:block;width:38%;height:100%;border-radius:999px;background:#ffb400}
-      .jd-reminders>a>strong{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:16px}.jd-reminders>a>strong small{font-size:13px;color:#7e8798;font-weight:400}.jd-reminders>a>b:last-child{color:#8e98a9;font-size:24px}
-      @media(max-width:560px){
-        .jd-home{padding-left:12px;padding-right:12px}
-        .jd-header{height:82px;grid-template-columns:43px 1fr auto}.jd-logo{font-size:31px}.jd-header-actions .lang-switcher{display:none}
-        .jd-sos{min-height:112px;padding:18px;grid-template-columns:62px 1fr 25px}.jd-sos-triangle{width:58px;height:55px}.jd-sos-triangle b{font-size:36px}.jd-sos-copy strong{font-size:29px}.jd-sos-copy small{font-size:13px}
-        .jd-services>button{flex-basis:142px;height:205px}.jd-service-image{height:116px}.jd-services strong{font-size:16px}
-        .jd-promos button{flex-basis:248px;height:160px}
-        .jd-car-card{grid-template-columns:145px minmax(0,1fr) 16px;min-height:145px}.jd-car-image{height:120px}.jd-car-image img{width:155px}.jd-health{grid-column:2;justify-self:start;padding:8px 10px}.jd-car-card>em{grid-column:3;grid-row:1/3}.jd-car-data strong{font-size:18px}
-        .jd-reminders>a{grid-template-columns:50px minmax(0,1fr) auto 14px;padding:10px 12px}.jd-reminders>a>strong{font-size:14px}
+      .refined-home{
+        height:100%;
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        padding-bottom:104px;
+        background:#f6f7f9;
       }
-      @media(max-width:410px){
-        .jd-title-row h2{font-size:20px}.jd-title-row button,.jd-title-row a{font-size:13px}
-        .jd-services>button{flex-basis:132px}
-        .jd-car-card{grid-template-columns:118px minmax(0,1fr) 14px}.jd-car-image img{width:128px}.jd-health{font-size:11px}
-        .jd-reminders>a>strong{display:none}.jd-reminders>a{grid-template-columns:48px minmax(0,1fr) 14px}
+
+      .refined-sticky{
+        position:sticky;
+        top:0;
+        z-index:30;
+        padding:0 14px 12px;
+        background:rgba(255,255,255,.97);
+        backdrop-filter:blur(14px);
+        border-bottom:1px solid rgba(15,23,42,.06);
       }
+
+      .refined-header{
+        margin:0 -14px;
+        padding:0 14px;
+        background:#fff;
+      }
+
+      .refined-sos{
+        width:100%;
+        margin:0;
+        border:0;
+        text-decoration:none;
+        cursor:pointer;
+      }
+
+      .refined-alert{
+        width:48px;
+        height:48px;
+        border:4px solid #fff;
+        border-radius:15px;
+        display:grid;
+        place-items:center;
+        font-size:30px;
+        font-weight:900;
+      }
+
+      .sos-choice-panel{
+        margin-top:10px;
+        max-height:55vh;
+        overflow-y:auto;
+        border:1px solid #e6e9ee;
+        border-radius:20px;
+        padding:14px;
+        background:#fff;
+        box-shadow:0 14px 34px rgba(15,23,42,.16);
+      }
+
+      .sos-choice-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        margin-bottom:10px;
+      }
+
+      .sos-choice-head b{font-size:18px}
+      .sos-choice-head button{
+        width:34px;
+        height:34px;
+        border:0;
+        border-radius:50%;
+        background:#f1f3f6;
+        font-size:24px;
+      }
+
+      .sos-choice-grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:9px;
+      }
+
+      .sos-choice-grid button{
+        min-height:88px;
+        border:1px solid #edf0f4;
+        border-radius:16px;
+        background:#fff;
+        padding:10px;
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        justify-content:center;
+        gap:7px;
+        text-align:left;
+        color:#101828;
+      }
+
+      .sos-choice-grid span{font-size:25px}
+      .sos-choice-grid b{font-size:13px;line-height:1.25}
+
+      .refined-services{
+        display:flex;
+        overflow-x:auto;
+        gap:10px;
+        padding-bottom:8px;
+        scroll-snap-type:x proximity;
+      }
+
+      .refined-services .service-card{
+        min-width:145px;
+        scroll-snap-align:start;
+      }
+
+      .refined-services.is-all{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        overflow:visible;
+      }
+
+      .refined-services.is-all .service-card{
+        min-width:0;
+      }
+
+      .refined-offers,
+      .refined-car-section,
+      .refined-reminders{
+        padding:0 14px;
+        margin-top:22px;
+      }
+
+      .offer-row{
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        padding-bottom:6px;
+      }
+
+      .offer-row button{
+        min-width:220px;
+        height:118px;
+        border:0;
+        border-radius:18px;
+        padding:16px;
+        display:flex;
+        flex-direction:column;
+        justify-content:flex-end;
+        align-items:flex-start;
+        gap:7px;
+        color:#fff;
+        background:linear-gradient(135deg,#121923,#313b49);
+        box-shadow:0 10px 24px rgba(16,24,40,.14);
+      }
+
+      .offer-row button:nth-child(2){
+        color:#121923;
+        background:linear-gradient(135deg,#ffc51a,#f3a700);
+      }
+
+      .offer-row button:nth-child(3){
+        background:linear-gradient(135deg,#061d3e,#0e3e78);
+      }
+
+      .offer-row span{
+        border-radius:8px;
+        padding:5px 8px;
+        background:#f5222d;
+        color:#fff;
+        font-weight:900;
+      }
+
+      .offer-row b{font-size:18px}
+
+      .refined-car-card{
+        display:grid;
+        grid-template-columns:84px 1fr auto 18px;
+        gap:11px;
+        align-items:center;
+        padding:14px;
+        border:1px solid #e8ebef;
+        border-radius:20px;
+        background:#fff;
+        box-shadow:0 8px 22px rgba(16,24,40,.07);
+        color:#101828;
+        text-decoration:none;
+      }
+
+      .refined-car-emoji{
+        height:74px;
+        border-radius:15px;
+        display:grid;
+        place-items:center;
+        background:#f2f4f7;
+        font-size:48px;
+      }
+
+      .refined-car-card>div{
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+        min-width:0;
+      }
+
+      .refined-car-card>div b{
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+      }
+
+      .refined-car-card>div small{color:#667085}
+
+      .refined-car-card>strong{
+        padding:8px 10px;
+        border-radius:15px;
+        background:#e6f8e9;
+        color:#159447;
+        font-size:12px;
+        white-space:nowrap;
+      }
+
+      .refined-car-card>em{
+        color:#98a2b3;
+        font-size:24px;
+        font-style:normal;
+      }
+
+      .reminder-list{
+        overflow:hidden;
+        border:1px solid #e8ebef;
+        border-radius:20px;
+        background:#fff;
+        box-shadow:0 8px 22px rgba(16,24,40,.06);
+      }
+
+      .reminder-list a{
+        min-height:72px;
+        display:grid;
+        grid-template-columns:44px 1fr auto 14px;
+        gap:10px;
+        align-items:center;
+        padding:10px 12px;
+        border-bottom:1px solid #edf0f3;
+        color:#101828;
+        text-decoration:none;
+      }
+
+      .reminder-list a:last-child{border-bottom:0}
+      .reminder-list i{
+        width:42px;
+        height:42px;
+        border-radius:13px;
+        display:grid;
+        place-items:center;
+        background:#fff1c2;
+        font-style:normal;
+      }
+
+      .reminder-list a:nth-child(2) i{background:#dcefff}
+      .reminder-list a:nth-child(3) i{background:#dcf6df}
+      .reminder-list a:nth-child(4) i{background:#eee5ff}
+
+      .reminder-list span{
+        display:flex;
+        flex-direction:column;
+        gap:3px;
+      }
+
+      .reminder-list span small{color:#667085}
+      .reminder-list strong{
+        font-size:11px;
+        text-align:right;
+        white-space:nowrap;
+      }
+      .reminder-list em{
+        color:#98a2b3;
+        font-style:normal;
+        font-size:21px;
+      }
+
+      .refined-home .home-section-title a{
+        border:0;
+        background:transparent;
+        color:#f5a800;
+        font-weight:800;
+        text-decoration:none;
+      }
+
+      @media(max-width:420px){
+        .sos-choice-grid{grid-template-columns:1fr 1fr}
+        .refined-car-card{grid-template-columns:74px 1fr 16px}
+        .refined-car-card>strong{
+          grid-column:2;
+          justify-self:start;
+        }
+        .refined-car-card>em{
+          grid-column:3;
+          grid-row:1/3;
+        }
+        .refined-car-emoji{height:66px;font-size:42px}
+        .reminder-list strong{display:none}
+      }
+
+      /* Home UI v3: polished mobile layout without changing application logic */
+      .refined-home{
+        scrollbar-width:none;
+        background:
+          radial-gradient(circle at 50% -120px,rgba(255,184,0,.08),transparent 320px),
+          #f5f6f8;
+      }
+      .refined-home::-webkit-scrollbar{display:none}
+
+      .refined-sticky{
+        padding:0 14px 14px;
+        border-bottom:0;
+        box-shadow:0 7px 22px rgba(15,23,42,.07);
+      }
+
+      .refined-header{
+        min-height:84px;
+        display:grid!important;
+        grid-template-columns:42px minmax(0,1fr) auto 42px!important;
+        gap:9px;
+        align-items:center;
+      }
+
+      .refined-header .menu-button,
+      .refined-header .notify-button{
+        width:40px;
+        height:40px;
+        border-radius:13px;
+        background:#f7f8fa;
+      }
+
+      .refined-header .menu-button{
+        font-size:0;
+        position:relative;
+      }
+      .refined-header .menu-button::before,
+      .refined-header .menu-button::after{
+        content:'';
+        position:absolute;
+        left:10px;
+        width:20px;
+        height:2.5px;
+        border-radius:4px;
+        background:#111827;
+      }
+      .refined-header .menu-button::before{top:14px;box-shadow:0 6px 0 #111827}
+      .refined-header .menu-button::after{top:26px}
+
+      .refined-wordmark{
+        min-width:0;
+        display:flex!important;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        line-height:1;
+      }
+      .refined-wordmark b,
+      .refined-wordmark strong{
+        display:inline;
+        font-size:32px!important;
+        letter-spacing:-1.9px;
+      }
+      .refined-wordmark small{
+        margin-top:6px;
+        font-size:7px!important;
+        letter-spacing:3px!important;
+        white-space:nowrap;
+        color:#111827!important;
+        opacity:.78;
+      }
+
+      .refined-language{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      .refined-language .lang-switcher,
+      .refined-language [class*="language"]{
+        transform:scale(.9);
+        transform-origin:center;
+      }
+
+      .refined-sos{
+        min-height:104px;
+        border-radius:24px!important;
+        padding:17px 20px!important;
+        grid-template-columns:56px 74px 1fr 24px!important;
+        gap:10px!important;
+        background:
+          radial-gradient(circle at 15% 50%,rgba(255,255,255,.13),transparent 120px),
+          linear-gradient(135deg,#ff2836 0%,#f31122 65%,#dc0715 100%)!important;
+        box-shadow:0 17px 32px rgba(238,18,35,.24)!important;
+      }
+      .refined-sos> b{
+        font-size:35px!important;
+        line-height:1!important;
+      }
+      .refined-sos>div{
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+      }
+      .refined-sos>div strong{
+        font-size:16px!important;
+        line-height:1.15;
+      }
+      .refined-sos>div small{
+        font-size:12px!important;
+        opacity:.9;
+      }
+      .refined-alert{
+        width:48px!important;
+        height:48px!important;
+        border-radius:15px!important;
+        font-size:28px!important;
+      }
+
+      .services-section{
+        padding:26px 14px 0!important;
+      }
+
+      .home-section-title{
+        margin-bottom:14px!important;
+      }
+      .home-section-title h2{
+        font-size:22px!important;
+        letter-spacing:-.45px;
+      }
+      .home-section-title button,
+      .home-section-title a{
+        color:#f2a900!important;
+        font-size:13px!important;
+        font-weight:900!important;
+      }
+
+      .refined-services,
+      .offer-row{
+        scrollbar-width:none;
+        -ms-overflow-style:none;
+      }
+      .refined-services::-webkit-scrollbar,
+      .offer-row::-webkit-scrollbar{
+        display:none;
+      }
+
+      .refined-services{
+        gap:12px;
+        padding:3px 1px 12px;
+      }
+      .refined-services .service-card{
+        min-width:142px!important;
+        height:172px!important;
+        border:1px solid rgba(15,23,42,.05)!important;
+        border-radius:21px!important;
+        background:
+          linear-gradient(180deg,#fff 0%,#fbfbfc 100%)!important;
+        box-shadow:
+          0 10px 24px rgba(15,23,42,.075),
+          inset 0 1px 0 rgba(255,255,255,.9)!important;
+        padding:15px 12px!important;
+      }
+      .refined-services .service-card svg{
+        width:46px!important;
+        height:46px!important;
+      }
+      .refined-services .service-card strong{
+        min-height:40px;
+        font-size:14px!important;
+        line-height:1.24!important;
+      }
+      .refined-services .service-card small{
+        margin-top:auto;
+        font-size:12px!important;
+        font-weight:800!important;
+      }
+
+      .refined-offers,
+      .refined-car-section,
+      .refined-reminders{
+        padding:0 14px!important;
+        margin-top:25px!important;
+      }
+
+      .offer-row{
+        gap:12px;
+        padding:2px 1px 10px;
+      }
+      .offer-row button{
+        min-width:224px!important;
+        height:126px!important;
+        border-radius:20px!important;
+        padding:16px!important;
+        box-shadow:0 12px 27px rgba(15,23,42,.16)!important;
+      }
+
+      .refined-car-card{
+        min-height:114px;
+        grid-template-columns:92px minmax(0,1fr) auto 16px!important;
+        border-radius:22px!important;
+        padding:14px!important;
+        box-shadow:0 10px 25px rgba(15,23,42,.075)!important;
+      }
+      .refined-car-emoji{
+        width:92px;
+        height:82px!important;
+        background:
+          linear-gradient(145deg,#f1f4f7,#fff)!important;
+        font-size:51px!important;
+      }
+      .refined-car-card>div b{
+        font-size:17px;
+      }
+      .refined-car-card>div small{
+        font-size:12px;
+      }
+      .refined-car-card>strong{
+        font-size:11px!important;
+      }
+
+      .reminder-list{
+        border-radius:22px!important;
+      }
+      .reminder-list a{
+        min-height:74px!important;
+      }
+
+      .sos-choice-panel{
+        border-radius:22px!important;
+        padding:13px!important;
+      }
+      .sos-choice-grid button{
+        min-height:94px!important;
+        border-radius:17px!important;
+        box-shadow:0 5px 14px rgba(15,23,42,.045);
+      }
+
+      @media(max-width:420px){
+        .refined-header{
+          grid-template-columns:40px minmax(0,1fr) auto 40px!important;
+          gap:6px;
+        }
+        .refined-wordmark b,
+        .refined-wordmark strong{
+          font-size:28px!important;
+        }
+        .refined-wordmark small{
+          font-size:6px!important;
+          letter-spacing:2.4px!important;
+        }
+        .refined-language{
+          transform:scale(.86);
+          margin:0 -5px;
+        }
+        .refined-sos{
+          min-height:96px;
+          grid-template-columns:48px 64px 1fr 18px!important;
+          padding:15px 15px!important;
+        }
+        .refined-sos> b{font-size:31px!important}
+        .refined-sos>div strong{font-size:14px!important}
+        .refined-sos>div small{font-size:11px!important}
+        .refined-services .service-card{
+          min-width:136px!important;
+          height:166px!important;
+        }
+        .refined-car-card{
+          grid-template-columns:78px minmax(0,1fr) 14px!important;
+        }
+        .refined-car-emoji{
+          width:78px;
+          height:72px!important;
+          font-size:44px!important;
+        }
+      }
+
+      /* JolDos SOS and mobile stability patch */
+      html,
+      body{
+        width:100%;
+        max-width:100%;
+        overflow-x:hidden!important;
+        overscroll-behavior-x:none;
+      }
+
+      *{
+        box-sizing:border-box;
+      }
+
+      .app-shell,
+      .phone,
+      .home-screen,
+      .refined-home,
+      .refined-sticky,
+      .sos-choice-panel,
+      .services-section,
+      .refined-offers,
+      .refined-car-section,
+      .refined-reminders{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+      }
+
+      .app-shell{
+        overflow-x:hidden!important;
+      }
+
+      .phone{
+        overflow-x:hidden!important;
+        touch-action:pan-y;
+      }
+
+      .refined-home{
+        overflow-x:hidden!important;
+        overscroll-behavior-x:none;
+        touch-action:pan-y;
+      }
+
+      .refined-sticky{
+        left:0;
+        right:0;
+        overflow:visible;
+      }
+
+      .sos-choice-panel{
+        overflow-x:hidden!important;
+        margin-left:0!important;
+        margin-right:0!important;
+      }
+
+      .sos-choice-grid{
+        width:100%;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:10px!important;
+      }
+
+      .sos-choice-grid button{
+        width:100%;
+        min-width:0!important;
+        max-width:100%;
+        min-height:108px!important;
+        display:grid!important;
+        grid-template-columns:46px minmax(0,1fr) 18px;
+        align-items:center!important;
+        gap:10px!important;
+        padding:14px!important;
+        overflow:hidden;
+      }
+
+      .sos-choice-grid button>span{
+        width:46px;
+        height:46px;
+        display:grid;
+        place-items:center;
+        border-radius:14px;
+        background:#f7f9fc;
+        font-size:27px!important;
+      }
+
+      .sos-choice-grid button>b{
+        min-width:0;
+        overflow-wrap:anywhere;
+        word-break:normal;
+        hyphens:auto;
+        font-size:15px!important;
+        line-height:1.25!important;
+      }
+
+      .sos-choice-grid button>em{
+        color:#98a2b3;
+        font-size:31px;
+        line-height:1;
+        font-style:normal;
+        justify-self:end;
+      }
+
+      .refined-services,
+      .offer-row{
+        max-width:100%;
+        overscroll-behavior-x:contain;
+      }
+
+      .refined-services .service-card,
+      .offer-row button{
+        flex-shrink:0;
+      }
+
+      .bottom-nav,
+      nav{
+        max-width:100%;
+      }
+
+      @media(max-width:520px){
+        .app-shell{
+          padding:0!important;
+        }
+
+        .phone{
+          width:100%!important;
+          max-width:100%!important;
+          min-height:100dvh;
+          border-radius:0!important;
+          margin:0!important;
+        }
+
+        .refined-sticky{
+          padding-left:12px!important;
+          padding-right:12px!important;
+        }
+
+        .services-section,
+        .refined-offers,
+        .refined-car-section,
+        .refined-reminders{
+          padding-left:12px!important;
+          padding-right:12px!important;
+        }
+      }
+
+      @media(max-width:380px){
+        .sos-choice-grid{
+          grid-template-columns:1fr!important;
+        }
+
+        .sos-choice-grid button{
+          min-height:82px!important;
+        }
+      }
+
     `}</style>
   </main>
 }
