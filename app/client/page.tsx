@@ -344,7 +344,7 @@ export default function Home(){
     setNotificationsOpen(false)
     setSosOpen(false)
     setTab('home')
-    setStage(activeOrderId?'active':'start')
+    setStage('start')
   }
 
   function toggleNotifications(){
@@ -365,6 +365,12 @@ export default function Home(){
     setNotificationsOpen(false)
     setSosOpen(false)
     window.location.assign('/')
+  }
+
+  function openMasterApp(){
+    setNotificationsOpen(false)
+    setSosOpen(false)
+    window.location.assign('/master')
   }
 
   function openNotification(item:(typeof clientNotifications)[number]){
@@ -1135,13 +1141,13 @@ export default function Home(){
     if(tab==='map') return <section className="page-view"><header><h1>{tx('mapHelp')}</h1><p>{tx('chooseNearest')}</p></header><MapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading} page/><div className="mini-list">{masters.map((m,i)=><button type="button" key={m.name} onClick={()=>{setActiveMaster(i);setStage('result');setTab('home')}}><span>{m.initials}</span><div><b>{m.name}</b><small>{m.role} · {m.distance}</small></div><strong>{m.eta}</strong></button>)}</div></section>
     if(tab==='sto') return <section className="page-view scroll-page"><header><h1>{tx('catalog')}</h1><p>{tx('trustedAstana')}</p></header><div className="station-list">{stations.map(s=><article key={s.name}><div className="station-logo">J</div><div><h3>{s.name}</h3><p>{s.type}</p><small>★ {s.rating} · {s.distance} · {s.open}</small></div><button type="button" onClick={()=>notify(`${s.name}: ${tx('cardOpened')}`)}>›</button></article>)}</div></section>
     if(tab==='orders') return <section className="page-view scroll-page"><header><h1>{tx('myOrders')}</h1><p>{tx('historyCurrent')}</p></header>{orders.length===0?<div className="empty"><span>▤</span><h2>{tx('noOrders')}</h2><p>{tx('noOrdersDesc')}</p><button type="button" onClick={goHome}>{tx('find')}</button></div>:<div className="order-list">{orders.map(o=><article key={o.id}><div><small>{o.createdAt}</small><h3>{o.problem}</h3><p>{o.master} · {o.location}</p></div><b className={isActiveOrderStatus(o.status)?'live':''}>{statusLabel(o.status)}</b>{isActiveOrderStatus(o.status)&&<button type="button" onClick={()=>{setActiveOrderId(o.id);setStage('active');setTab('home')}}>{tx('openOrder')}</button>}</article>)}</div>}</section>
-    return <section className="page-view scroll-page"><header><h1>{tx('profile')}</h1><p>{tx('settingsTitle')}</p></header><div className="profile-card"><div className="profile-icon">👤</div><h2>{tx('userName')}</h2><p>Astana · Kazakhstan</p><a href="tel:+77000000000">{tx('supportCall')}</a></div><div className="settings"><Link href="/client/car" style={{textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',boxSizing:'border-box'}}>{tx('cars')} <span>›</span></Link><button type="button" onClick={()=>notify(tx('payment'))}>{tx('payment')} <span>›</span></button><button type="button" onClick={toggleNotifications}>{tx('notifications')} <span>›</span></button><button type="button" onClick={switchRole}>{tx('roleBack')} <span>›</span></button></div></section>
+    return <section className="page-view scroll-page"><header><h1>{tx('profile')}</h1><p>{tx('settingsTitle')}</p></header><div className="profile-card"><div className="profile-icon">👤</div><h2>{tx('userName')}</h2><p>Astana · Kazakhstan</p><a href="tel:+77000000000">{tx('supportCall')}</a></div><div className="settings"><Link href="/client/car" style={{textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',boxSizing:'border-box'}}>{tx('cars')} <span>›</span></Link><button type="button" onClick={()=>notify(tx('payment'))}>{tx('payment')} <span>›</span></button><button type="button" onClick={toggleNotifications}>{tx('notifications')} <span>›</span></button><button type="button" onClick={openMasterApp}>{lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} <span>›</span></button><button type="button" onClick={switchRole}>{tx('roleBack')} <span>›</span></button></div></section>
   }
 
   const isHomeStart=tab==='home'&&stage==='start'
   return <main className="app-shell">
     <div className={`phone ${isHomeStart?'home-phone':''}`}>
-      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
+      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="master-shortcut" aria-label={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} title={lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} onClick={openMasterApp}>M</button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
       {renderTab()}
       <BottomNav tab={tab} onChange={setTab} lang={lang}/>
       <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
@@ -1430,6 +1436,16 @@ export default function Home(){
       @media(max-width:380px){
         .sos-choice-grid{grid-template-columns:1fr}
         .sos-choice-grid button{min-height:82px}
+      }
+
+      .master-shortcut{
+        width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+        border:1px solid rgba(255,255,255,.18);border-radius:12px;
+        background:#ffbd16;color:#101828;font-size:14px;font-weight:900;cursor:pointer;
+      }
+      @media(max-width:420px){
+        .client-topbar{gap:7px}
+        .master-shortcut{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:13px}
       }
     `}</style>
   </main>
