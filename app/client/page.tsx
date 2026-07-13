@@ -84,6 +84,7 @@ export default function Home(){
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
   const [sosOpen,setSosOpen]=useState(false)
   const [notificationsOpen,setNotificationsOpen]=useState(false)
+  const [unreadNotifications,setUnreadNotifications]=useState(3)
   const [showAllServices,setShowAllServices]=useState(false)
   const [cars,setCars]=useState<ClientCar[]>([])
 
@@ -256,6 +257,14 @@ export default function Home(){
   function toggleNotifications(){
     setSosOpen(false)
     setNotificationsOpen(value=>!value)
+  }
+
+  function closeNotifications(){
+    setNotificationsOpen(false)
+  }
+
+  function markNotificationsRead(){
+    setUnreadNotifications(0)
   }
   function chooseProblem(id:string){
     const service=getService(id)
@@ -531,47 +540,74 @@ export default function Home(){
             onClick={toggleNotifications}
             aria-expanded={notificationsOpen}
           >
-            <BellIcon/><i>3</i>
+            <BellIcon/>{unreadNotifications>0&&<i>{unreadNotifications}</i>}
           </button>
         </header>
 
         {notificationsOpen&&(
-          <section className="notifications-panel" aria-label={tx('notifications')}>
-            <div className="notifications-head">
-              <div>
-                <b>{tx('notifications')}</b>
-                <small>{lang==='kk'?'3 жаңа хабарлама':lang==='en'?'3 new notifications':'3 новых уведомления'}</small>
+          <>
+            <button
+              type="button"
+              className="notifications-backdrop"
+              aria-label="Закрыть уведомления"
+              onClick={closeNotifications}
+            />
+            <section className="notifications-panel" aria-label={tx('notifications')}>
+              <div className="notifications-head">
+                <div>
+                  <b>{tx('notifications')}</b>
+                  <small>
+                    {unreadNotifications>0
+                      ? (lang==='kk'?`${unreadNotifications} жаңа хабарлама`:lang==='en'?`${unreadNotifications} new notifications`:`${unreadNotifications} новых уведомления`)
+                      : (lang==='kk'?'Жаңа хабарлама жоқ':lang==='en'?'No new notifications':'Новых уведомлений нет')}
+                  </small>
+                </div>
+                <button type="button" onClick={closeNotifications} aria-label="Закрыть">×</button>
               </div>
-              <button type="button" onClick={()=>setNotificationsOpen(false)} aria-label="Закрыть">×</button>
-            </div>
 
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('orders')}}>
-              <span>🛠️</span>
-              <div>
-                <b>{lang==='kk'?'Шеберлер желіде':lang==='en'?'Specialists are online':'Мастера рядом онлайн'}</b>
-                <small>{lang==='kk'?'Жолдағы көмекке өтінім беруге болады':lang==='en'?'You can request roadside assistance':'Можно отправить заявку на помощь'}</small>
+              <div className="notifications-actions">
+                <button type="button" onClick={markNotificationsRead}>
+                  {lang==='kk'?'Барлығын оқу':lang==='en'?'Mark all read':'Прочитать все'}
+                </button>
               </div>
-              <em>›</em>
-            </button>
 
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);openService('wheel_change')}}>
-              <span>🛞</span>
-              <div>
-                <b>{lang==='kk'?'Дөңгелектерді тексеріңіз':lang==='en'?'Check your tires':'Проверьте колёса'}</b>
-                <small>{lang==='kk'?'Қысым мен шиналардың күйін тексеру уақыты':lang==='en'?'Time to check pressure and tire condition':'Пора проверить давление и состояние шин'}</small>
-              </div>
-              <em>›</em>
-            </button>
+              <button type="button" className="notification-item is-new" onClick={()=>{markNotificationsRead();closeNotifications();setTab('orders')}}>
+                <span>🛠️</span>
+                <div>
+                  <b>{lang==='kk'?'Шебер тапсырысты қабылдады':lang==='en'?'The specialist accepted the order':'Мастер принял заказ'}</b>
+                  <small>{lang==='kk'?'Шебер сізге қарай шығып жатыр · 2 мин бұрын':lang==='en'?'The specialist is heading to you · 2 min ago':'Мастер уже выезжает к вам · 2 мин назад'}</small>
+                </div>
+                <i/>
+              </button>
 
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('profile')}}>
-              <span>🎁</span>
-              <div>
-                <b>{lang==='kk'?'JolDos акциясы':lang==='en'?'JolDos offer':'Акция JolDos'}</b>
-                <small>{lang==='kk'?'Таңдалған қызметтерге жеңілдік':lang==='en'?'Discount on selected services':'Скидка на выбранные услуги'}</small>
-              </div>
-              <em>›</em>
-            </button>
-          </section>
+              <button type="button" className="notification-item is-new" onClick={()=>{markNotificationsRead();closeNotifications();openService('wheel_change')}}>
+                <span>🛞</span>
+                <div>
+                  <b>{lang==='kk'?'Дөңгелекке көмекке -10%':lang==='en'?'10% off wheel assistance':'Скидка 10% на помощь с колесом'}</b>
+                  <small>{lang==='kk'?'Ұсыныс бүгін жарамды':lang==='en'?'The offer is valid today':'Предложение действует сегодня'}</small>
+                </div>
+                <i/>
+              </button>
+
+              <button type="button" className="notification-item is-new" onClick={()=>{markNotificationsRead();closeNotifications()}}>
+                <span>🛢️</span>
+                <div>
+                  <b>{lang==='kk'?'Май ауыстыруды еске салу':lang==='en'?'Oil change reminder':'Напоминание о замене масла'}</b>
+                  <small>{lang==='kk'?'1 200 км қалды':lang==='en'?'1,200 km remaining':'Осталось 1 200 км'}</small>
+                </div>
+                <i/>
+              </button>
+
+              <button type="button" className="notification-item" onClick={()=>{closeNotifications();setTab('profile')}}>
+                <span>🎁</span>
+                <div>
+                  <b>{lang==='kk'?'JolDos акциясы':lang==='en'?'JolDos offer':'Акция JolDos'}</b>
+                  <small>{lang==='kk'?'Таңдалған қызметтерге жеңілдік':lang==='en'?'Discount on selected services':'Скидка на выбранные услуги'}</small>
+                </div>
+                <em>›</em>
+              </button>
+            </section>
+          </>
         )}
 
         <button
@@ -670,6 +706,17 @@ export default function Home(){
             </button>
           ))}
         </div>
+
+        {!showAllServices&&(
+          <button type="button" className="all-services-card" onClick={()=>setShowAllServices(true)}>
+            <span><i/><i/><i/><i/></span>
+            <div>
+              <b>{lang==='kk'?'Барлық қызметтер':lang==='en'?'All services':'Все услуги'}</b>
+              <small>{lang==='kk'?'Көлігіңізге арналған толық қызметтер тізімі':lang==='en'?'Full list of services for your car':'Полный список услуг для вашего авто'}</small>
+            </div>
+            <em>›</em>
+          </button>
+        )}
       </section>
 
       <section className="refined-offers">
@@ -697,6 +744,7 @@ export default function Home(){
             <b>{lang==='kk'?'Шина сервисі':lang==='en'?'Tire service':'Шиномонтаж'}</b>
           </button>
         </div>
+        <div className="offer-dots" aria-hidden="true"><i className="active"/><i/><i/><i/></div>
       </section>
 
       <section className="refined-car-section">
@@ -752,7 +800,7 @@ export default function Home(){
         <div className="reminder-list">
           <Link href="/client/car">
             <i>🛢️</i>
-            <span><b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b><small>{lang==='kk'?'1 200 км кейін':lang==='en'?'in 1,200 km':'через 1 200 км'}</small></span>
+            <span><b>{lang==='kk'?'Май ауыстыру':lang==='en'?'Oil change':'Замена масла'}</b><small>{lang==='kk'?'1 200 км кейін':lang==='en'?'in 1,200 km':'через 1 200 км'}</small><span className="reminder-progress"><i/></span></span>
             <strong>≈ 20 дней</strong><em>›</em>
           </Link>
           <Link href="/client/car">
@@ -1019,7 +1067,7 @@ export default function Home(){
   const isHomeStart=tab==='home'&&stage==='start'
   return <main className="app-shell">
     <div className={`phone ${isHomeStart?'home-phone':''}`}>
-      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/></button></div>}
+      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={toggleNotifications} aria-expanded={notificationsOpen}><BellIcon/>{unreadNotifications>0&&<i>{unreadNotifications}</i>}</button></div>}
       {renderTab()}
       <BottomNav tab={tab} onChange={setTab} lang={lang}/>
       <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
@@ -1047,7 +1095,9 @@ export default function Home(){
       .app-shell{
         width:100%;
         min-width:0;
+        min-height:100dvh;
         overflow-x:hidden;
+        background:#eef1f5;
       }
 
       .phone{
@@ -1150,8 +1200,24 @@ export default function Home(){
       .refined-language{display:flex;align-items:center;justify-content:center}
       .refined-language .lang-switcher,.refined-language [class*="language"]{transform:scale(.9);transform-origin:center}
 
+      .notifications-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:38;
+        border:0;
+        background:rgba(15,23,42,.2);
+        backdrop-filter:blur(2px);
+      }
+
       .notifications-panel{
-        margin:0 0 12px;
+        position:absolute;
+        top:76px;
+        right:14px;
+        z-index:40;
+        width:min(370px,calc(100% - 28px));
+        max-height:min(560px,calc(100vh - 110px));
+        overflow-y:auto;
+        margin:0;
         padding:12px;
         border:1px solid #e6e9ee;
         border-radius:22px;
@@ -1166,6 +1232,8 @@ export default function Home(){
         width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;
         background:#f1f3f6;color:#344054;font-size:24px;cursor:pointer;
       }
+      .notifications-actions{display:flex;justify-content:flex-end;padding:0 2px 6px}
+      .notifications-actions button{border:0;background:transparent;color:#0969da;font-size:12px;font-weight:800;cursor:pointer}
       .notification-item{
         width:100%;min-width:0;display:grid;grid-template-columns:44px minmax(0,1fr) 16px;
         gap:10px;align-items:center;padding:11px 8px;border:0;border-top:1px solid #edf0f3;
@@ -1176,6 +1244,8 @@ export default function Home(){
       .notification-item b{font-size:14px;line-height:1.2}
       .notification-item small{font-size:12px;line-height:1.3;color:#667085}
       .notification-item em{font-style:normal;font-size:24px;color:#98a2b3}
+      .notification-item>i{width:8px;height:8px;border-radius:50%;background:#1677ff}
+      .notification-item.is-new{background:#f8fbff}
 
       .refined-sos{
         width:100%;
@@ -1239,6 +1309,18 @@ export default function Home(){
       .refined-services .service-card small{margin-top:auto;font-size:12px!important;font-weight:800!important}
       .refined-services.is-all{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
       .refined-services.is-all .service-card{width:100%;min-width:0;max-width:100%}
+
+      .all-services-card{
+        width:100%;min-width:0;margin-top:10px;padding:16px 18px;border:1px solid #e7ebf0;border-radius:20px;
+        display:grid;grid-template-columns:54px minmax(0,1fr) 18px;gap:12px;align-items:center;
+        background:#fff;color:#101828;text-align:left;box-shadow:0 8px 22px rgba(15,23,42,.07);cursor:pointer;
+      }
+      .all-services-card>span{width:48px;height:48px;border-radius:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:8px;background:#eef5ff}
+      .all-services-card>span i{border:3px solid #1677ff;border-radius:4px}
+      .all-services-card>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+      .all-services-card b{font-size:17px}
+      .all-services-card small{color:#667085;line-height:1.3}
+      .all-services-card>em{font-size:28px;font-style:normal;color:#1677ff}
 
       .refined-offers,.refined-car-section,.refined-reminders{padding:0 14px;margin-top:25px}
       .offer-row{padding:2px 1px 10px}
