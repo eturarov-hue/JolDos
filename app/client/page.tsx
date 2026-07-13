@@ -244,6 +244,20 @@ export default function Home(){
   function notify(text:string){ setToast(text); window.setTimeout(()=>setToast(''),2300) }
   function vibrate(){ if('vibrate' in navigator) navigator.vibrate(25) }
   function goHome(){ setTab('home'); setStage('start'); setSelected(''); setServiceType('road_assistance'); setProviderType('master'); setActiveMaster(0); setActiveOrderId(''); setRating(0) }
+
+  function goBackInsideClient(){
+    if(tab!=='home'){
+      setTab('home')
+      return
+    }
+
+    if(stage==='active'){
+      setTab('orders')
+      return
+    }
+
+    setStage('start')
+  }
   function chooseProblem(id:string){
     const service=getService(id)
     if(!service)return
@@ -795,7 +809,7 @@ export default function Home(){
   const isHomeStart=tab==='home'&&stage==='start'
   return <main className="app-shell">
     <div className={`phone ${isHomeStart?'home-phone':''}`}>
-      {!isHomeStart&&<div className="topbar client-topbar"><Link href="/" className="role-back" aria-label={tx('roleBack')} title={tx('roleBack')}>←</Link><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}
+      {!isHomeStart&&<div className="topbar client-topbar"><button type="button" className="role-back" aria-label={tx('home')} title={tx('home')} onClick={goBackInsideClient}>←</button><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}
       {renderTab()}
       <BottomNav tab={tab} onChange={setTab} lang={lang}/>
       <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
