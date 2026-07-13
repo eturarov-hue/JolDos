@@ -84,6 +84,7 @@ export default function Home(){
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
   const [sosOpen,setSosOpen]=useState(false)
   const [notificationsOpen,setNotificationsOpen]=useState(false)
+  const [readNotificationIds,setReadNotificationIds]=useState<string[]>([])
   const [showAllServices,setShowAllServices]=useState(false)
   const [cars,setCars]=useState<ClientCar[]>([])
 
@@ -96,6 +97,78 @@ export default function Home(){
     : null
   const master=masters[activeMaster]
   const activeOrder=orders.find(o=>o.id===activeOrderId)
+  const clientNotifications=useMemo(()=>{
+    const items:Array<{
+      id:string
+      icon:string
+      title:string
+      description:string
+      action:()=>void
+    }>=[]
+
+    if(activeOrder){
+      items.push({
+        id:`order-${activeOrder.id}-${activeOrder.status}`,
+        icon:'🛠️',
+        title:statusLabel(activeOrder.status),
+        description:activeOrder.master&&activeOrder.master!==tx('searchingMaster')
+          ? `${activeOrder.master} · ${activeOrder.problem}`
+          : activeOrder.problem,
+        action:()=>{
+          setActiveOrderId(activeOrder.id)
+          setStage('active')
+          setTab('home')
+        },
+      })
+    }else{
+      const latestOrder=orders[0]
+      if(latestOrder){
+        items.push({
+          id:`history-${latestOrder.id}-${latestOrder.status}`,
+          icon:latestOrder.status==='Завершён'?'✓':'▤',
+          title:statusLabel(latestOrder.status),
+          description:latestOrder.problem,
+          action:()=>setTab('orders'),
+        })
+      }
+    }
+
+    const activeCar=cars[0]
+    if(activeCar){
+      items.push({
+        id:`car-${activeCar.id}`,
+        icon:'🚙',
+        title:`${activeCar.make} ${activeCar.model}`,
+        description:lang==='kk'
+          ? `${activeCar.plate} · Көлік деректері жүктелді`
+          : lang==='en'
+            ? `${activeCar.plate} · Vehicle data loaded`
+            : `${activeCar.plate} · Данные автомобиля загружены`,
+        action:()=>{ window.location.href='/client/car' },
+      })
+
+      items.push({
+        id:`ogpo-${activeCar.id}`,
+        icon:'🛡️',
+        title:lang==='kk'
+          ? 'КҚИ АҚЖМС'
+          : lang==='en'
+            ? 'Compulsory motor liability insurance'
+            : 'ОГПО ВТС',
+        description:lang==='kk'
+          ? 'Полис мерзімін қосыңыз — JolDos алдын ала ескертеді'
+          : lang==='en'
+            ? 'Add the policy expiry date to receive reminders'
+            : 'Добавьте срок полиса — JolDos напомнит заранее',
+        action:()=>{ window.location.href='/client/car' },
+      })
+    }
+
+    return items
+  },[activeOrder,cars,lang,orders])
+  const unreadNotificationCount=clientNotifications.filter(
+    item=>!readNotificationIds.includes(item.id)
+  ).length
   const primaryProviderType=(
     service:ServiceDefinition | null,
   ):ServiceProviderType=>service?.providerTypes[0]??'master'
@@ -255,7 +328,19 @@ export default function Home(){
 
   function toggleNotifications(){
     setSosOpen(false)
-    setNotificationsOpen(value=>!value)
+    setNotificationsOpen(value=>{
+      const next=!value
+      if(next){
+        setReadNotificationIds(clientNotifications.map(item=>item.id))
+      }
+      return next
+    })
+  }
+
+  function openNotification(item:(typeof clientNotifications)[number]){
+    setNotificationsOpen(false)
+    setReadNotificationIds(prev=>prev.includes(item.id)?prev:[...prev,item.id])
+    item.action()
   }
   function chooseProblem(id:string){
     const service=getService(id)
@@ -531,7 +616,7 @@ export default function Home(){
             onClick={toggleNotifications}
             aria-expanded={notificationsOpen}
           >
-            <BellIcon/><i>3</i>
+            <BellIcon/>{unreadNotificationCount>0&&<i>{unreadNotificationCount}</i>}
           </button>
         </header>
 
@@ -540,37 +625,44 @@ export default function Home(){
             <div className="notifications-head">
               <div>
                 <b>{tx('notifications')}</b>
-                <small>{lang==='kk'?'3 жаңа хабарлама':lang==='en'?'3 new notifications':'3 новых уведомления'}</small>
+                <small>
+                  {clientNotifications.length===0
+                    ? (lang==='kk'?'Жаңа хабарламалар жоқ':lang==='en'?'No new notifications':'Новых уведомлений нет')
+                    : unreadNotificationCount>0
+                      ? (lang==='kk'
+                          ? `${unreadNotificationCount} жаңа хабарлама`
+                          : lang==='en'
+                            ? `${unreadNotificationCount} new notifications`
+                            : `${unreadNotificationCount} новых уведомления`)
+                      : (lang==='kk'?'Барлығы оқылды':lang==='en'?'All read':'Все прочитано')}
+                </small>
               </div>
               <button type="button" onClick={()=>setNotificationsOpen(false)} aria-label="Закрыть">×</button>
             </div>
 
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('orders')}}>
-              <span>🛠️</span>
-              <div>
-                <b>{lang==='kk'?'Шеберлер желіде':lang==='en'?'Specialists are online':'Мастера рядом онлайн'}</b>
-                <small>{lang==='kk'?'Жолдағы көмекке өтінім беруге болады':lang==='en'?'You can request roadside assistance':'Можно отправить заявку на помощь'}</small>
+            {clientNotifications.length===0?(
+              <div className="notifications-empty">
+                <span>✓</span>
+                <b>{lang==='kk'?'Барлығы тыныш':lang==='en'?'You are all caught up':'Новых событий пока нет'}</b>
+                <small>{lang==='kk'?'Тапсырыс мәртебесі өзгергенде хабарлаймыз':lang==='en'?'We will notify you when an order status changes':'Здесь появятся изменения статуса заказа и важные напоминания'}</small>
               </div>
-              <em>›</em>
-            </button>
-
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);openService('wheel_change')}}>
-              <span>🛞</span>
-              <div>
-                <b>{lang==='kk'?'Дөңгелектерді тексеріңіз':lang==='en'?'Check your tires':'Проверьте колёса'}</b>
-                <small>{lang==='kk'?'Қысым мен шиналардың күйін тексеру уақыты':lang==='en'?'Time to check pressure and tire condition':'Пора проверить давление и состояние шин'}</small>
-              </div>
-              <em>›</em>
-            </button>
-
-            <button type="button" className="notification-item" onClick={()=>{setNotificationsOpen(false);setTab('profile')}}>
-              <span>🎁</span>
-              <div>
-                <b>{lang==='kk'?'JolDos акциясы':lang==='en'?'JolDos offer':'Акция JolDos'}</b>
-                <small>{lang==='kk'?'Таңдалған қызметтерге жеңілдік':lang==='en'?'Discount on selected services':'Скидка на выбранные услуги'}</small>
-              </div>
-              <em>›</em>
-            </button>
+            ):(
+              clientNotifications.map(item=>(
+                <button
+                  type="button"
+                  className="notification-item"
+                  key={item.id}
+                  onClick={()=>openNotification(item)}
+                >
+                  <span>{item.icon}</span>
+                  <div>
+                    <b>{item.title}</b>
+                    <small>{item.description}</small>
+                  </div>
+                  <em>›</em>
+                </button>
+              ))
+            )}
           </section>
         )}
 
@@ -757,7 +849,7 @@ export default function Home(){
           </Link>
           <Link href="/client/car">
             <i>🛡️</i>
-            <span><b>{lang==='kk'?'Сақтандыру':lang==='en'?'Insurance':'Страховка'}</b><small>{lang==='kk'?'9 күннен кейін':lang==='en'?'in 9 days':'через 9 дней'}</small></span>
+            <span><b>{lang==='kk'?'КҚИ АҚЖМС':lang==='en'?'Motor liability insurance':'ОГПО ВТС'}</b><small>{lang==='kk'?'Міндетті автосақтандыру · 9 күннен кейін':lang==='en'?'Compulsory insurance · in 9 days':'Обязательное страхование ответственности · через 9 дней'}</small></span>
             <strong>до 20.05</strong><em>›</em>
           </Link>
           <Link href="/client/car">
@@ -1166,6 +1258,16 @@ export default function Home(){
         width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;
         background:#f1f3f6;color:#344054;font-size:24px;cursor:pointer;
       }
+      .notifications-empty{
+        min-height:138px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        gap:6px;padding:18px;text-align:center;color:#101828;
+      }
+      .notifications-empty>span{
+        width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+        background:#e9f8ee;color:#159447;font-weight:900;
+      }
+      .notifications-empty>b{font-size:14px}
+      .notifications-empty>small{max-width:280px;font-size:12px;line-height:1.4;color:#667085}
       .notification-item{
         width:100%;min-width:0;display:grid;grid-template-columns:44px minmax(0,1fr) 16px;
         gap:10px;align-items:center;padding:11px 8px;border:0;border-top:1px solid #edf0f3;
