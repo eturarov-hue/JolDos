@@ -85,6 +85,7 @@ export default function Home(){
   const [sosOpen,setSosOpen]=useState(false)
   const [notificationsOpen,setNotificationsOpen]=useState(false)
   const [readNotificationIds,setReadNotificationIds]=useState<string[]>([])
+  const [notificationsHydrated,setNotificationsHydrated]=useState(false)
   const [showAllServices,setShowAllServices]=useState(false)
   const [cars,setCars]=useState<ClientCar[]>([])
 
@@ -181,7 +182,27 @@ export default function Home(){
 
   useEffect(()=>{
     try{ localStorage.removeItem('joldos-orders') }catch{}
+
+    try{
+      const saved=localStorage.getItem('joldos-read-notifications')
+      const parsed=saved?JSON.parse(saved):[]
+      if(Array.isArray(parsed)){
+        setReadNotificationIds(parsed.filter((item):item is string=>typeof item==='string'))
+      }
+    }catch{}
+
+    setNotificationsHydrated(true)
   },[])
+
+  useEffect(()=>{
+    if(!notificationsHydrated)return
+    try{
+      localStorage.setItem(
+        'joldos-read-notifications',
+        JSON.stringify(readNotificationIds)
+      )
+    }catch{}
+  },[notificationsHydrated,readNotificationIds])
 
   useEffect(()=>{
     let cancelled=false
@@ -331,10 +352,19 @@ export default function Home(){
     setNotificationsOpen(value=>{
       const next=!value
       if(next){
-        setReadNotificationIds(clientNotifications.map(item=>item.id))
+        setReadNotificationIds(prev=>Array.from(new Set([
+          ...prev,
+          ...clientNotifications.map(item=>item.id),
+        ])))
       }
       return next
     })
+  }
+
+  function switchRole(){
+    setNotificationsOpen(false)
+    setSosOpen(false)
+    window.location.assign('/')
   }
 
   function openNotification(item:(typeof clientNotifications)[number]){
@@ -1105,7 +1135,7 @@ export default function Home(){
     if(tab==='map') return <section className="page-view"><header><h1>{tx('mapHelp')}</h1><p>{tx('chooseNearest')}</p></header><MapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading} page/><div className="mini-list">{masters.map((m,i)=><button type="button" key={m.name} onClick={()=>{setActiveMaster(i);setStage('result');setTab('home')}}><span>{m.initials}</span><div><b>{m.name}</b><small>{m.role} · {m.distance}</small></div><strong>{m.eta}</strong></button>)}</div></section>
     if(tab==='sto') return <section className="page-view scroll-page"><header><h1>{tx('catalog')}</h1><p>{tx('trustedAstana')}</p></header><div className="station-list">{stations.map(s=><article key={s.name}><div className="station-logo">J</div><div><h3>{s.name}</h3><p>{s.type}</p><small>★ {s.rating} · {s.distance} · {s.open}</small></div><button type="button" onClick={()=>notify(`${s.name}: ${tx('cardOpened')}`)}>›</button></article>)}</div></section>
     if(tab==='orders') return <section className="page-view scroll-page"><header><h1>{tx('myOrders')}</h1><p>{tx('historyCurrent')}</p></header>{orders.length===0?<div className="empty"><span>▤</span><h2>{tx('noOrders')}</h2><p>{tx('noOrdersDesc')}</p><button type="button" onClick={goHome}>{tx('find')}</button></div>:<div className="order-list">{orders.map(o=><article key={o.id}><div><small>{o.createdAt}</small><h3>{o.problem}</h3><p>{o.master} · {o.location}</p></div><b className={isActiveOrderStatus(o.status)?'live':''}>{statusLabel(o.status)}</b>{isActiveOrderStatus(o.status)&&<button type="button" onClick={()=>{setActiveOrderId(o.id);setStage('active');setTab('home')}}>{tx('openOrder')}</button>}</article>)}</div>}</section>
-    return <section className="page-view scroll-page"><header><h1>{tx('profile')}</h1><p>{tx('settingsTitle')}</p></header><div className="profile-card"><div className="profile-icon">👤</div><h2>{tx('userName')}</h2><p>Astana · Kazakhstan</p><a href="tel:+77000000000">{tx('supportCall')}</a></div><div className="settings"><Link href="/client/car" style={{textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',boxSizing:'border-box'}}>{tx('cars')} <span>›</span></Link><button type="button" onClick={()=>notify(tx('payment'))}>{tx('payment')} <span>›</span></button><button type="button" onClick={()=>notify(tx('notifications'))}>{tx('notifications')} <span>›</span></button></div></section>
+    return <section className="page-view scroll-page"><header><h1>{tx('profile')}</h1><p>{tx('settingsTitle')}</p></header><div className="profile-card"><div className="profile-icon">👤</div><h2>{tx('userName')}</h2><p>Astana · Kazakhstan</p><a href="tel:+77000000000">{tx('supportCall')}</a></div><div className="settings"><Link href="/client/car" style={{textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',boxSizing:'border-box'}}>{tx('cars')} <span>›</span></Link><button type="button" onClick={()=>notify(tx('payment'))}>{tx('payment')} <span>›</span></button><button type="button" onClick={toggleNotifications}>{tx('notifications')} <span>›</span></button><button type="button" onClick={switchRole}>{tx('roleBack')} <span>›</span></button></div></section>
   }
 
   const isHomeStart=tab==='home'&&stage==='start'
