@@ -480,7 +480,7 @@ export default function Home(){
             ☰
           </button>
 
-          <div className="wordmark">
+          <div className="wordmark refined-wordmark">
             <b>Jol</b><strong>Dos</strong>
             <small>
               {lang==='kk'
@@ -489,6 +489,14 @@ export default function Home(){
                   ? 'ROADSIDE ASSISTANCE'
                   : 'ПОМОЩЬ НА ДОРОГЕ'}
             </small>
+          </div>
+
+          <div className="refined-language">
+            <LanguageSwitcher
+              lang={lang}
+              onChange={setLang}
+              compact
+            />
           </div>
 
           <button
@@ -1247,6 +1255,282 @@ export default function Home(){
         }
         .refined-car-emoji{height:66px;font-size:42px}
         .reminder-list strong{display:none}
+      }
+
+      /* Home UI v3: polished mobile layout without changing application logic */
+      .refined-home{
+        scrollbar-width:none;
+        background:
+          radial-gradient(circle at 50% -120px,rgba(255,184,0,.08),transparent 320px),
+          #f5f6f8;
+      }
+      .refined-home::-webkit-scrollbar{display:none}
+
+      .refined-sticky{
+        padding:0 14px 14px;
+        border-bottom:0;
+        box-shadow:0 7px 22px rgba(15,23,42,.07);
+      }
+
+      .refined-header{
+        min-height:84px;
+        display:grid!important;
+        grid-template-columns:42px minmax(0,1fr) auto 42px!important;
+        gap:9px;
+        align-items:center;
+      }
+
+      .refined-header .menu-button,
+      .refined-header .notify-button{
+        width:40px;
+        height:40px;
+        border-radius:13px;
+        background:#f7f8fa;
+      }
+
+      .refined-header .menu-button{
+        font-size:0;
+        position:relative;
+      }
+      .refined-header .menu-button::before,
+      .refined-header .menu-button::after{
+        content:'';
+        position:absolute;
+        left:10px;
+        width:20px;
+        height:2.5px;
+        border-radius:4px;
+        background:#111827;
+      }
+      .refined-header .menu-button::before{top:14px;box-shadow:0 6px 0 #111827}
+      .refined-header .menu-button::after{top:26px}
+
+      .refined-wordmark{
+        min-width:0;
+        display:flex!important;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        line-height:1;
+      }
+      .refined-wordmark b,
+      .refined-wordmark strong{
+        display:inline;
+        font-size:32px!important;
+        letter-spacing:-1.9px;
+      }
+      .refined-wordmark small{
+        margin-top:6px;
+        font-size:7px!important;
+        letter-spacing:3px!important;
+        white-space:nowrap;
+        color:#111827!important;
+        opacity:.78;
+      }
+
+      .refined-language{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      .refined-language .lang-switcher,
+      .refined-language [class*="language"]{
+        transform:scale(.9);
+        transform-origin:center;
+      }
+
+      .refined-sos{
+        min-height:104px;
+        border-radius:24px!important;
+        padding:17px 20px!important;
+        grid-template-columns:56px 74px 1fr 24px!important;
+        gap:10px!important;
+        background:
+          radial-gradient(circle at 15% 50%,rgba(255,255,255,.13),transparent 120px),
+          linear-gradient(135deg,#ff2836 0%,#f31122 65%,#dc0715 100%)!important;
+        box-shadow:0 17px 32px rgba(238,18,35,.24)!important;
+      }
+      .refined-sos> b{
+        font-size:35px!important;
+        line-height:1!important;
+      }
+      .refined-sos>div{
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+      }
+      .refined-sos>div strong{
+        font-size:16px!important;
+        line-height:1.15;
+      }
+      .refined-sos>div small{
+        font-size:12px!important;
+        opacity:.9;
+      }
+      .refined-alert{
+        width:48px!important;
+        height:48px!important;
+        border-radius:15px!important;
+        font-size:28px!important;
+      }
+
+      .services-section{
+        padding:26px 14px 0!important;
+      }
+
+      .home-section-title{
+        margin-bottom:14px!important;
+      }
+      .home-section-title h2{
+        font-size:22px!important;
+        letter-spacing:-.45px;
+      }
+      .home-section-title button,
+      .home-section-title a{
+        color:#f2a900!important;
+        font-size:13px!important;
+        font-weight:900!important;
+      }
+
+      .refined-services,
+      .offer-row{
+        scrollbar-width:none;
+        -ms-overflow-style:none;
+      }
+      .refined-services::-webkit-scrollbar,
+      .offer-row::-webkit-scrollbar{
+        display:none;
+      }
+
+      .refined-services{
+        gap:12px;
+        padding:3px 1px 12px;
+      }
+      .refined-services .service-card{
+        min-width:142px!important;
+        height:172px!important;
+        border:1px solid rgba(15,23,42,.05)!important;
+        border-radius:21px!important;
+        background:
+          linear-gradient(180deg,#fff 0%,#fbfbfc 100%)!important;
+        box-shadow:
+          0 10px 24px rgba(15,23,42,.075),
+          inset 0 1px 0 rgba(255,255,255,.9)!important;
+        padding:15px 12px!important;
+      }
+      .refined-services .service-card svg{
+        width:46px!important;
+        height:46px!important;
+      }
+      .refined-services .service-card strong{
+        min-height:40px;
+        font-size:14px!important;
+        line-height:1.24!important;
+      }
+      .refined-services .service-card small{
+        margin-top:auto;
+        font-size:12px!important;
+        font-weight:800!important;
+      }
+
+      .refined-offers,
+      .refined-car-section,
+      .refined-reminders{
+        padding:0 14px!important;
+        margin-top:25px!important;
+      }
+
+      .offer-row{
+        gap:12px;
+        padding:2px 1px 10px;
+      }
+      .offer-row button{
+        min-width:224px!important;
+        height:126px!important;
+        border-radius:20px!important;
+        padding:16px!important;
+        box-shadow:0 12px 27px rgba(15,23,42,.16)!important;
+      }
+
+      .refined-car-card{
+        min-height:114px;
+        grid-template-columns:92px minmax(0,1fr) auto 16px!important;
+        border-radius:22px!important;
+        padding:14px!important;
+        box-shadow:0 10px 25px rgba(15,23,42,.075)!important;
+      }
+      .refined-car-emoji{
+        width:92px;
+        height:82px!important;
+        background:
+          linear-gradient(145deg,#f1f4f7,#fff)!important;
+        font-size:51px!important;
+      }
+      .refined-car-card>div b{
+        font-size:17px;
+      }
+      .refined-car-card>div small{
+        font-size:12px;
+      }
+      .refined-car-card>strong{
+        font-size:11px!important;
+      }
+
+      .reminder-list{
+        border-radius:22px!important;
+      }
+      .reminder-list a{
+        min-height:74px!important;
+      }
+
+      .sos-choice-panel{
+        border-radius:22px!important;
+        padding:13px!important;
+      }
+      .sos-choice-grid button{
+        min-height:94px!important;
+        border-radius:17px!important;
+        box-shadow:0 5px 14px rgba(15,23,42,.045);
+      }
+
+      @media(max-width:420px){
+        .refined-header{
+          grid-template-columns:40px minmax(0,1fr) auto 40px!important;
+          gap:6px;
+        }
+        .refined-wordmark b,
+        .refined-wordmark strong{
+          font-size:28px!important;
+        }
+        .refined-wordmark small{
+          font-size:6px!important;
+          letter-spacing:2.4px!important;
+        }
+        .refined-language{
+          transform:scale(.86);
+          margin:0 -5px;
+        }
+        .refined-sos{
+          min-height:96px;
+          grid-template-columns:48px 64px 1fr 18px!important;
+          padding:15px 15px!important;
+        }
+        .refined-sos> b{font-size:31px!important}
+        .refined-sos>div strong{font-size:14px!important}
+        .refined-sos>div small{font-size:11px!important}
+        .refined-services .service-card{
+          min-width:136px!important;
+          height:166px!important;
+        }
+        .refined-car-card{
+          grid-template-columns:78px minmax(0,1fr) 14px!important;
+        }
+        .refined-car-emoji{
+          width:78px;
+          height:72px!important;
+          font-size:44px!important;
+        }
       }
     `}</style>
   </main>
