@@ -23,6 +23,18 @@ type ClientOrder = Order & {
   providerType?: ServiceProviderType
 }
 
+type CarSummary = {
+  id: string
+  make: string
+  model: string
+  year: string
+  plate: string
+  mileage: string
+  engine: string
+  transmission: string
+  fuel: string
+}
+
 
 const ACTIVE_ORDER_STATUSES = new Set([
   'Новый заказ',
@@ -51,7 +63,25 @@ export default function Home(){
     ratingWord:{ru:'рейтинг',kk:'рейтинг',en:'rating'}, arrival:{ru:'прибытие',kk:'келу уақыты',en:'arrival'}, verified:{ru:'проверены',kk:'тексерілген',en:'verified'}, firstChoose:{ru:'Сначала выберите проблему',kk:'Алдымен мәселені таңдаңыз',en:'Choose a problem first'}, geoUnsupported:{ru:'Геолокация не поддерживается',kk:'Геолокацияға қолдау көрсетілмейді',en:'Geolocation is not supported'}, geoHttps:{ru:'На телефоне геолокация работает только через HTTPS',kk:'Телефонда геолокация тек HTTPS арқылы жұмыс істейді',en:'On mobile, geolocation requires HTTPS'}, geoFound:{ru:'Местоположение определено',kk:'Орналасқан жер анықталды',en:'Location detected'}, geoAllow:{ru:'Разрешите доступ к геолокации',kk:'Геолокацияға рұқсат беріңіз',en:'Allow location access'},
     helpRoad:{ru:'Помощь на дороге',kk:'Жолдағы көмек',en:'Roadside assistance'}, searchingMaster:{ru:'Ищем мастера',kk:'Шебер ізделуде',en:'Searching for a specialist'}, requestSent:{ru:'Заявка отправлена мастерам',kk:'Өтінім шеберлерге жіберілді',en:'Request sent to specialists'}, requestFailed:{ru:'Не удалось отправить заявку',kk:'Өтінімді жіберу мүмкін болмады',en:'Could not send request'}, sentToSuitable:{ru:'Заказ отправлен подходящим мастерам',kk:'Тапсырыс қолайлы шеберлерге жіберілді',en:'Order sent to suitable specialists'}, waitingAcceptance:{ru:'Ожидаем, кто первым примет заказ',kk:'Тапсырысты кім бірінші қабылдайтынын күтеміз',en:'Waiting for the first specialist to accept'}, noSpecialists:{ru:'Нет свободных специалистов',kk:'Бос мамандар жоқ',en:'No specialists available'}, noSpecialistsDesc:{ru:'Все подходящие мастера отказались или сейчас недоступны. Отмените заказ и попробуйте снова позже.',kk:'Барлық сәйкес шеберлер бас тартты немесе қазір қолжетімсіз. Тапсырысты тоқтатып, кейінірек қайталап көріңіз.',en:'All suitable specialists declined or are currently unavailable. Cancel the order and try again later.'}, assignedMaster:{ru:'Назначенный мастер',kk:'Тағайындалған шебер',en:'Assigned specialist'}, cancelOrder:{ru:'Отменить заказ',kk:'Тапсырысты болдырмау',en:'Cancel order'}, cancelConfirm:{ru:'Отменить текущий заказ?',kk:'Ағымдағы тапсырысты болдырмау керек пе?',en:'Cancel the current order?'}, cancelSuccess:{ru:'Заказ отменён',kk:'Тапсырыс болдырылмады',en:'Order cancelled'}, cancelFailed:{ru:'Не удалось отменить заказ',kk:'Тапсырысты болдырмау мүмкін болмады',en:'Could not cancel the order'}, workDoneRate:{ru:'Работа завершена — оцените мастера',kk:'Жұмыс аяқталды — шеберді бағалаңыз',en:'Work completed — rate the specialist'}, rateRequired:{ru:'Поставьте оценку мастеру',kk:'Шеберге баға беріңіз',en:'Rate the specialist'}, thanksRating:{ru:'Спасибо за оценку!',kk:'Бағаңызға рақмет!',en:'Thank you for your rating!'}, messageSent:{ru:'Сообщение отправлено',kk:'Хабарлама жіберілді',en:'Message sent'},
     findPrefix:{ru:'Найти помощь',kk:'Көмек табу',en:'Find help'}, reviews:{ru:'отзывов',kk:'пікір',en:'reviews'}, toYou:{ru:'до вас',kk:'сізге дейін',en:'to you'}, distanceWord:{ru:'расстояние',kk:'қашықтық',en:'distance'}, yourProblem:{ru:'Ваша проблема',kk:'Сіздің мәселеңіз',en:'Your problem'}, calloutCost:{ru:'Стоимость выезда',kk:'Шақыру құны',en:'Call-out price'}, expectedArrival:{ru:'Ожидаемое прибытие',kk:'Күтілетін келу уақыты',en:'Expected arrival'}, onSite:{ru:'Мастер на месте',kk:'Шебер орнында',en:'Specialist is on site'}, waitUpdate:{ru:'Ожидать обновление от мастера',kk:'Шебердің жаңартуын күту',en:'Wait for specialist update'}, statusByMaster:{ru:'Статус меняет мастер в JolDos Master',kk:'Мәртебені JolDos Master қолданбасындағы шебер өзгертеді',en:'The specialist updates the status in JolDos Master'}, howWas:{ru:'Как всё прошло?',kk:'Қызмет қалай өтті?',en:'How did it go?'}, rateWork:{ru:'Оцените работу мастера',kk:'Шебердің жұмысын бағалаңыз',en:'Rate the specialist’s work'}, finishHome:{ru:'Завершить и вернуться на главную',kk:'Аяқтап, басты бетке оралу',en:'Finish and return home'},
-    mapHelp:{ru:'Карта помощи',kk:'Көмек картасы',en:'Assistance map'}, chooseNearest:{ru:'Выберите ближайшего мастера',kk:'Ең жақын шеберді таңдаңыз',en:'Choose the nearest specialist'}, catalog:{ru:'Каталог СТО',kk:'Автосервистер каталогы',en:'Service center directory'}, trustedAstana:{ru:'Проверенные сервисы Астаны',kk:'Астанадағы тексерілген автосервистер',en:'Verified service centers in Astana'}, cardOpened:{ru:'Карточка открыта',kk:'Карточка ашылды',en:'Card opened'}, myOrders:{ru:'Мои заказы',kk:'Менің тапсырыстарым',en:'My orders'}, historyCurrent:{ru:'История и текущие заявки',kk:'Тарих және ағымдағы өтінімдер',en:'History and active requests'}, noOrders:{ru:'Заказов пока нет',kk:'Әзірге тапсырыс жоқ',en:'No orders yet'}, noOrdersDesc:{ru:'Выберите проблему на главной и вызовите мастера.',kk:'Басты беттен мәселені таңдап, шебер шақырыңыз.',en:'Choose a problem on the home screen and request a specialist.'}, openOrder:{ru:'Открыть заказ',kk:'Тапсырысты ашу',en:'Open order'}, settingsTitle:{ru:'Настройки JolDos',kk:'JolDos баптаулары',en:'JolDos settings'}, userName:{ru:'Пользователь JolDos',kk:'JolDos пайдаланушысы',en:'JolDos user'}, supportCall:{ru:'Позвонить в поддержку',kk:'Қолдау қызметіне қоңырау шалу',en:'Call support'}, cars:{ru:'Мои автомобили',kk:'Менің көліктерім',en:'My vehicles'}, payment:{ru:'Способы оплаты',kk:'Төлем тәсілдері',en:'Payment methods'}, notifications:{ru:'Уведомления',kk:'Хабарландырулар',en:'Notifications'}, astanaCurrent:{ru:'Астана, текущее местоположение',kk:'Астана, ағымдағы орналасқан жер',en:'Astana, current location'}, incomingMessage:{ru:'Здравствуйте! Я уже выезжаю к вам.',kk:'Сәлеметсіз бе! Сізге қарай жолға шықтым.',en:'Hello! I am on my way to you.'}
+    mapHelp:{ru:'Карта помощи',kk:'Көмек картасы',en:'Assistance map'}, chooseNearest:{ru:'Выберите ближайшего мастера',kk:'Ең жақын шеберді таңдаңыз',en:'Choose the nearest specialist'}, catalog:{ru:'Каталог СТО',kk:'Автосервистер каталогы',en:'Service center directory'}, trustedAstana:{ru:'Проверенные сервисы Астаны',kk:'Астанадағы тексерілген автосервистер',en:'Verified service centers in Astana'}, cardOpened:{ru:'Карточка открыта',kk:'Карточка ашылды',en:'Card opened'}, myOrders:{ru:'Мои заказы',kk:'Менің тапсырыстарым',en:'My orders'}, historyCurrent:{ru:'История и текущие заявки',kk:'Тарих және ағымдағы өтінімдер',en:'History and active requests'}, noOrders:{ru:'Заказов пока нет',kk:'Әзірге тапсырыс жоқ',en:'No orders yet'}, noOrdersDesc:{ru:'Выберите проблему на главной и вызовите мастера.',kk:'Басты беттен мәселені таңдап, шебер шақырыңыз.',en:'Choose a problem on the home screen and request a specialist.'}, openOrder:{ru:'Открыть заказ',kk:'Тапсырысты ашу',en:'Open order'}, settingsTitle:{ru:'Настройки JolDos',kk:'JolDos баптаулары',en:'JolDos settings'}, userName:{ru:'Пользователь JolDos',kk:'JolDos пайдаланушысы',en:'JolDos user'}, supportCall:{ru:'Позвонить в поддержку',kk:'Қолдау қызметіне қоңырау шалу',en:'Call support'}, cars:{ru:'Мои автомобили',kk:'Менің көліктерім',en:'My vehicles'}, payment:{ru:'Способы оплаты',kk:'Төлем тәсілдері',en:'Payment methods'}, notifications:{ru:'Уведомления',kk:'Хабарландырулар',en:'Notifications'}, astanaCurrent:{ru:'Астана, текущее местоположение',kk:'Астана, ағымдағы орналасқан жер',en:'Astana, current location'}, incomingMessage:{ru:'Здравствуйте! Я уже выезжаю к вам.',kk:'Сәлеметсіз бе! Сізге қарай жолға шықтым.',en:'Hello! I am on my way to you.'},
+    popularServices:{ru:'Популярные услуги',kk:'Танымал қызметтер',en:'Popular services'},
+    viewAll:{ru:'Смотреть все',kk:'Барлығын көру',en:'View all'},
+    allServices:{ru:'Все услуги',kk:'Барлық қызметтер',en:'All services'},
+    allServicesDesc:{ru:'Полный список услуг для вашего авто',kk:'Көлігіңізге арналған барлық қызметтер',en:'Full list of services for your vehicle'},
+    offers:{ru:'Акции и скидки',kk:'Акциялар мен жеңілдіктер',en:'Offers and discounts'},
+    addCar:{ru:'Добавить',kk:'Қосу',en:'Add'},
+    everythingGood:{ru:'Всё хорошо',kk:'Бәрі жақсы',en:'All good'},
+    mileageWord:{ru:'Пробег',kk:'Жүріс',en:'Mileage'},
+    reminders:{ru:'Напоминания',kk:'Еске салғыштар',en:'Reminders'},
+    oilChange:{ru:'Замена масла',kk:'Май ауыстыру',en:'Oil change'},
+    insurance:{ru:'Страховка',kk:'Сақтандыру',en:'Insurance'},
+    battery:{ru:'Аккумулятор',kk:'Аккумулятор',en:'Battery'},
+    tireService:{ru:'Шиномонтаж',kk:'Шина сервисі',en:'Tire service'},
+    inKm:{ru:'через 1 200 км',kk:'1 200 км кейін',en:'in 1,200 km'},
+    inDays:{ru:'через 9 дней',kk:'9 күннен кейін',en:'in 9 days'},
+    warrantyMonths:{ru:'Гарантия 14 месяцев',kk:'Кепілдік 14 ай',en:'14-month warranty'},
+    tireKm:{ru:'через 3 500 км',kk:'3 500 км кейін',en:'in 3,500 km'},
+    urgentHelp:{ru:'Нужна срочная помощь на дороге?',kk:'Жолда шұғыл көмек керек пе?',en:'Need urgent roadside help?'}
   } as const
   const tx=(k:keyof typeof ui)=>ui[k][lang]
   const masters=useMemo(()=>getMasters(lang),[lang])
@@ -74,6 +104,8 @@ export default function Home(){
   const [chatOpen,setChatOpen]=useState(false)
   const [chatText,setChatText]=useState('')
   const [messages,setMessages]=useState<string[]>([tx('incomingMessage')])
+  const [cars,setCars]=useState<CarSummary[]>([])
+  const [homeScrolled,setHomeScrolled]=useState(false)
 
   const selectedService=useMemo(
     ()=>getService(selected),
@@ -96,6 +128,27 @@ export default function Home(){
 
   useEffect(()=>{
     try{ localStorage.removeItem('joldos-orders') }catch{}
+  },[])
+
+  useEffect(()=>{
+    const onScroll=()=>setHomeScrolled(window.scrollY>90)
+    onScroll()
+    window.addEventListener('scroll',onScroll,{passive:true})
+    return()=>window.removeEventListener('scroll',onScroll)
+  },[])
+
+  useEffect(()=>{
+    let cancelled=false
+    const loadCars=async()=>{
+      try{
+        const response=await fetch(`/api/cars?client=${encodeURIComponent('Ержан Т.')}`,{cache:'no-store'})
+        const data=await response.json()
+        if(cancelled||!response.ok||!Array.isArray(data.cars))return
+        setCars(data.cars)
+      }catch{}
+    }
+    void loadCars()
+    return()=>{cancelled=true}
   },[])
 
   useEffect(()=>{
@@ -348,27 +401,98 @@ export default function Home(){
 
   const homeServices=SERVICE_LIST
 
-  function StartScreen(){ return <div className="home-screen">
-    <header className="home-header">
-      <button type="button" className="menu-button" aria-label="Меню" onClick={()=>setTab('profile')}>☰</button>
-      <div className="wordmark"><b>Jol</b><strong>Dos</strong><small>{lang==='kk'?'ЖОЛДАҒЫ КӨМЕК':lang==='en'?'ROADSIDE ASSISTANCE':'ПОМОЩЬ НА ДОРОГЕ'}</small></div>
-      <button type="button" className="notify-button" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/><i>3</i></button>
-    </header>
+  function StartScreen(){
+    const popularIds=['jump_start','wheel_change','tow','fuel_delivery','car_unlock']
+    const popularServices=popularIds
+      .map(id=>getService(id))
+      .filter((service):service is ServiceDefinition=>Boolean(service))
+    const activeCar=cars[0]||null
 
-    <a className="home-sos" href="tel:112"><span className="phone-mark">☎</span><b>SOS</b><div><strong>{tx('emergency')}</strong><small>{lang==='kk'?'Шақыру үшін басыңыз':lang==='en'?'Tap to request help':'Нажмите для вызова'}</small></div><em>›</em></a>
+    return <div className={`approved-home ${homeScrolled?'is-scrolled':''}`}>
+      <div className="approved-fixed">
+        <header className="approved-header">
+          <button type="button" className="approved-menu" aria-label="Меню" onClick={()=>setTab('profile')}>
+            <span/><span/><span/>
+          </button>
+          <div className="approved-wordmark" aria-label="JolDos"><b>Jol</b><strong>Dos</strong></div>
+          <button type="button" className="approved-notify" aria-label={tx('notifications')} onClick={()=>notify(tx('notifications'))}>
+            <BellIcon/><i>3</i>
+          </button>
+        </header>
 
-    <section className="services-section">
-      <div className="home-section-title"><h2>{lang==='kk'?'Танымал қызметтер':lang==='en'?'Popular services':'Популярные услуги'}</h2><button type="button" onClick={()=>notify(lang==='kk'?'Барлық қызметтер төменде көрсетілген':lang==='en'?'All services are shown below':'Все услуги показаны ниже')}>{lang==='kk'?'Барлық қызметтер':lang==='en'?'All services':'Все услуги'} ›</button></div>
-      <div className="service-grid">{homeServices.map(service=><button type="button" key={service.id} className="service-card" onClick={()=>openService(service.id)}><ServiceIcon id={service.id}/><strong>{service.title[lang]}</strong><small>{service.priceFrom===null?'—':`${lang==='en'?'from':'от'} ${service.priceFrom.toLocaleString('ru-RU')} ₸`}</small></button>)}</div>
-    </section>
+        <button type="button" className="approved-sos" onClick={()=>findHelp('road_assistance')}>
+          <span className="approved-sos-icon">!</span>
+          <span className="approved-sos-copy"><b>SOS</b><small>{tx('urgentHelp')}</small></span>
+          <span className="approved-sos-arrow">›</span>
+        </button>
+      </div>
 
-    <section className="home-location">
-      <div className="location-head"><span>●</span><div><b>{lang==='kk'?'Менің орналасқан жерім':lang==='en'?'My location':'Мое местоположение'}</b><small>{locationText}</small></div><button type="button" onClick={useLocation}>{lang==='kk'?'Өзгерту':lang==='en'?'Change':'Изменить'}</button></div>
-      <div className="home-map"><MapView lang={lang} coords={coords} masters={[]} activeMaster={0} onSelectMaster={()=>{}} onUseLocation={useLocation} geoLoading={geoLoading}/></div>
-    </section>
+      <div className="approved-scroll">
+        <section className="approved-section">
+          <div className="approved-title-row">
+            <h2>{tx('popularServices')}</h2>
+            <button type="button" onClick={()=>document.getElementById('all-services')?.scrollIntoView({behavior:'smooth'})}>{tx('viewAll')} ›</button>
+          </div>
+          <div className="approved-popular">
+            {popularServices.map(service=>
+              <button type="button" key={service.id} onClick={()=>openService(service.id)}>
+                <ServiceIcon id={service.id}/>
+                <strong>{service.title[lang]}</strong>
+              </button>
+            )}
+          </div>
+        </section>
 
-    <section className="home-benefits"><div><i>◷</i><span><small>{lang==='kk'?'Жеткізу':lang==='en'?'Arrival':'Подача'}</small><b>10–15 мин</b></span></div><div><i>▣</i><span><small>{lang==='kk'?'Мин. баға':lang==='en'?'Min. price':'Мин. цена'}</small><b>от 2 000 ₸</b></span></div><div><i>♢</i><span><small>{lang==='kk'?'Қауіпсіз':lang==='en'?'Safe':'Безопасно'}</small><b>{lang==='kk'?'Тексерілген шеберлер':lang==='en'?'Verified specialists':'Проверенные мастера'}</b></span></div></section>
-  </div> }
+        <button id="all-services" type="button" className="approved-all-services" onClick={()=>notify(tx('allServices'))}>
+          <span className="approved-grid-icon"><i/><i/><i/><i/></span>
+          <span><b>{tx('allServices')}</b><small>{tx('allServicesDesc')}</small></span>
+          <em>›</em>
+        </button>
+
+        <section className="approved-section">
+          <div className="approved-title-row">
+            <h2>{tx('offers')}</h2>
+            <button type="button" onClick={()=>notify(tx('offers'))}>{tx('viewAll')} ›</button>
+          </div>
+          <div className="approved-offers">
+            <button type="button" onClick={()=>openService('road_assistance')}><span>-20%</span><b>{tx('oilChange')}</b><small>5W-40</small></button>
+            <button type="button" onClick={()=>openService('tow')}><span>-15%</span><b>{lang==='kk'?'Эвакуатор жеңілдікпен':lang==='en'?'Tow truck discount':'Эвакуатор со скидкой'}</b></button>
+            <button type="button" onClick={()=>openService('wheel_change')}><span>-10%</span><b>{lang==='kk'?'Шина сервисіне жеңілдік':lang==='en'?'Tire service discount':'Шиномонтаж со скидкой'}</b></button>
+          </div>
+        </section>
+
+        <section className="approved-section">
+          <div className="approved-title-row">
+            <h2>{tx('cars')}</h2>
+            <Link href="/client/car">{activeCar?tx('viewAll'):tx('addCar')} {activeCar?'›':'+'}</Link>
+          </div>
+          <Link href="/client/car" className="approved-car-card">
+            <div className="approved-car-art">🚙</div>
+            <div>
+              <b>{activeCar?`${activeCar.make} ${activeCar.model}`:'Toyota Prado'}</b>
+              <span>{activeCar?.plate||'KZ 123 ABC 02'}</span>
+              <small>{tx('mileageWord')}: {Number(activeCar?.mileage||124500).toLocaleString('ru-RU')} км</small>
+            </div>
+            <strong>✓ {tx('everythingGood')}</strong>
+            <em>›</em>
+          </Link>
+        </section>
+
+        <section className="approved-section approved-reminders">
+          <div className="approved-title-row">
+            <h2>{tx('reminders')}</h2>
+            <Link href="/client/car">{tx('viewAll')} ›</Link>
+          </div>
+          <div className="approved-reminder-list">
+            <Link href="/client/car"><i>🛢️</i><span><b>{tx('oilChange')}</b><small>{tx('inKm')}</small></span><strong>≈ 20 дней</strong><em>›</em></Link>
+            <Link href="/client/car"><i>🛡️</i><span><b>{tx('insurance')}</b><small>{tx('inDays')}</small></span><strong>до 20.05</strong><em>›</em></Link>
+            <Link href="/client/car"><i>🔋</i><span><b>{tx('battery')}</b><small>{tx('warrantyMonths')}</small></span><strong>до 10.06</strong><em>›</em></Link>
+            <Link href="/client/car"><i>🛞</i><span><b>{tx('tireService')}</b><small>{tx('tireKm')}</small></span><strong>≈ 45 дней</strong><em>›</em></Link>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
 
   function Searching(){ return <section className="searching-screen"><div className="radar"><span className="pulse one"/><span className="pulse two"/><span className="pulse three"/><div className="car-dot">🚗</div></div><h1>{tx('searching')}</h1><p>{problem?.title}</p><small>{locationText}</small><div className="loading-line"><i/></div><button type="button" onClick={()=>setStage('start')}>{tx('cancel')}</button></section> }
 
@@ -612,5 +736,33 @@ export default function Home(){
   }
 
   const isHomeStart=tab==='home'&&stage==='start'
-  return <main className="app-shell"><div className={`phone ${isHomeStart?'home-phone':''}`}>{!isHomeStart&&<div className="topbar client-topbar"><Link href="/" className="role-back" aria-label={tx('roleBack')} title={tx('roleBack')}>←</Link><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}{renderTab()}<BottomNav tab={tab} onChange={setTab} lang={lang}/><ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>{toast&&<div className="toast">{toast}</div>}</div></main>
+  return <main className="app-shell">
+    <div className={`phone ${isHomeStart?'home-phone':''}`}>
+      {!isHomeStart&&<div className="topbar client-topbar"><Link href="/" className="role-back" aria-label={tx('roleBack')} title={tx('roleBack')}>←</Link><LanguageSwitcher lang={lang} onChange={setLang} compact/><button type="button" className="city" onClick={()=>notify('Астана')}><PinIcon/><span>Астана</span></button><button type="button" className="bell" aria-label="Уведомления" onClick={()=>notify(tx('notifications'))}><BellIcon/></button></div>}
+      {renderTab()}
+      <BottomNav tab={tab} onChange={setTab} lang={lang}/>
+      <ChatSheet open={chatOpen} masterName={activeOrder?.master||master.name} messages={messages} value={chatText} onChange={setChatText} onSend={sendMessage} onClose={()=>setChatOpen(false)} lang={lang}/>
+      {toast&&<div className="toast">{toast}</div>}
+    </div>
+    <style jsx global>{`
+      .home-phone{max-width:100%!important;width:100%!important;background:#f7f8fa!important}
+      .approved-home{min-height:100vh;background:#f7f8fa;color:#101828;padding-bottom:110px}
+      .approved-fixed{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.97);backdrop-filter:blur(18px);padding:10px 18px 14px;border-bottom:1px solid rgba(15,23,42,.05)}
+      .approved-header{height:72px;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;max-width:1180px;margin:0 auto}
+      .approved-menu,.approved-notify{width:44px;height:44px;border:0;background:transparent;border-radius:14px;display:grid;place-items:center;position:relative;color:#101828}
+      .approved-menu span{width:25px;height:3px;background:#101828;border-radius:4px;display:block;margin:3px 0}
+      .approved-wordmark{text-align:center;font-size:38px;line-height:1;font-weight:900;letter-spacing:-2px}.approved-wordmark b{color:#101828}.approved-wordmark strong{color:#ffb800}
+      .approved-notify i{position:absolute;right:1px;top:1px;background:#ffb800;color:#101828;font-size:12px;font-style:normal;font-weight:900;min-width:21px;height:21px;border-radius:12px;display:grid;place-items:center}
+      .approved-sos{max-width:1180px;width:100%;height:112px;margin:0 auto;border:0;border-radius:25px;background:linear-gradient(135deg,#ff3131,#e80712);color:white;display:grid;grid-template-columns:72px 1fr 40px;align-items:center;gap:16px;padding:20px 26px;text-align:left;box-shadow:0 18px 35px rgba(235,27,35,.23);transition:.25s ease}
+      .approved-sos-icon{width:60px;height:60px;border:5px solid #fff;border-radius:18px;display:grid;place-items:center;font-size:38px;font-weight:900}.approved-sos-copy{display:flex;align-items:baseline;gap:18px}.approved-sos-copy b{font-size:44px;line-height:1}.approved-sos-copy small{font-size:20px;font-weight:700}.approved-sos-arrow{font-size:42px;text-align:right}
+      .approved-home.is-scrolled .approved-header{height:52px}.approved-home.is-scrolled .approved-wordmark{font-size:29px}.approved-home.is-scrolled .approved-sos{height:58px;border-radius:17px;padding:8px 18px;grid-template-columns:36px 1fr 24px}.approved-home.is-scrolled .approved-sos-icon{width:30px;height:30px;border-width:3px;border-radius:9px;font-size:19px}.approved-home.is-scrolled .approved-sos-copy b{font-size:25px}.approved-home.is-scrolled .approved-sos-copy small{font-size:14px}.approved-home.is-scrolled .approved-sos-arrow{font-size:26px}
+      .approved-scroll{max-width:1180px;margin:0 auto;padding:24px 18px 16px}.approved-section{margin-bottom:26px}.approved-title-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.approved-title-row h2{margin:0;font-size:26px;letter-spacing:-.5px}.approved-title-row button,.approved-title-row a{border:0;background:transparent;color:#1264e6;font-weight:750;text-decoration:none;font-size:16px}
+      .approved-popular{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none}.approved-popular::-webkit-scrollbar{display:none}.approved-popular button{min-width:150px;height:178px;border:1px solid #edf0f3;border-radius:22px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.07);padding:15px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#101828}.approved-popular strong{font-size:16px;line-height:1.25;text-align:center}
+      .approved-all-services{width:100%;min-height:88px;border:1px solid #e8ebef;border-radius:22px;background:#fff;box-shadow:0 8px 22px rgba(16,24,40,.06);display:grid;grid-template-columns:55px 1fr 28px;align-items:center;text-align:left;padding:16px 22px;margin-bottom:28px}.approved-all-services span:nth-child(2){display:flex;flex-direction:column;gap:5px}.approved-all-services b{font-size:21px}.approved-all-services small{font-size:14px;color:#667085}.approved-all-services em{font-size:35px;font-style:normal;color:#1264e6}.approved-grid-icon{width:38px;height:38px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.approved-grid-icon i{border:3px solid #1264e6;border-radius:5px}
+      .approved-offers{display:grid;grid-template-columns:repeat(3,minmax(250px,1fr));gap:14px;overflow-x:auto;scrollbar-width:none}.approved-offers::-webkit-scrollbar{display:none}.approved-offers button{min-width:250px;height:155px;border:0;border-radius:23px;padding:20px;color:#fff;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:6px;background:linear-gradient(135deg,#111827,#374151);box-shadow:0 10px 26px rgba(16,24,40,.15)}.approved-offers button:nth-child(2){background:linear-gradient(135deg,#ffc400,#f4a400);color:#111827}.approved-offers button:nth-child(3){background:linear-gradient(135deg,#051938,#0f3b72)}.approved-offers span{font-size:20px;font-weight:900;background:#f5222d;color:#fff;border-radius:10px;padding:5px 9px}.approved-offers b{font-size:21px;max-width:180px}.approved-offers small{opacity:.8}
+      .approved-car-card{display:grid;grid-template-columns:160px 1fr auto 24px;gap:18px;align-items:center;background:#fff;border:1px solid #e8ebef;border-radius:24px;padding:16px 20px;text-decoration:none;color:#101828;box-shadow:0 10px 24px rgba(16,24,40,.07)}.approved-car-art{height:112px;border-radius:18px;background:linear-gradient(135deg,#eef2f5,#fff);display:grid;place-items:center;font-size:70px}.approved-car-card>div:nth-child(2){display:flex;flex-direction:column;gap:7px}.approved-car-card b{font-size:24px}.approved-car-card span{font-size:17px}.approved-car-card small{font-size:15px;color:#667085}.approved-car-card>strong{background:#e8f8e9;color:#159447;border-radius:18px;padding:11px 16px;white-space:nowrap}.approved-car-card em{font-size:32px;color:#98a2b3;font-style:normal}
+      .approved-reminder-list{overflow:hidden;background:#fff;border:1px solid #e8ebef;border-radius:24px;box-shadow:0 10px 24px rgba(16,24,40,.06)}.approved-reminder-list a{min-height:82px;display:grid;grid-template-columns:54px 1fr auto 20px;gap:14px;align-items:center;padding:12px 18px;text-decoration:none;color:#101828;border-bottom:1px solid #edf0f3}.approved-reminder-list a:last-child{border-bottom:0}.approved-reminder-list i{width:48px;height:48px;border-radius:14px;background:#fff2c9;display:grid;place-items:center;font-style:normal;font-size:25px}.approved-reminder-list a:nth-child(2) i{background:#dff0ff}.approved-reminder-list a:nth-child(3) i{background:#daf7df}.approved-reminder-list a:nth-child(4) i{background:#eee4ff}.approved-reminder-list span{display:flex;flex-direction:column;gap:4px}.approved-reminder-list b{font-size:17px}.approved-reminder-list small{font-size:14px;color:#667085}.approved-reminder-list strong{font-size:15px;text-align:right}.approved-reminder-list em{font-size:25px;font-style:normal;color:#98a2b3}
+      @media(max-width:760px){.approved-fixed{padding:4px 12px 10px}.approved-header{height:66px}.approved-wordmark{font-size:34px}.approved-sos{height:96px;border-radius:22px;grid-template-columns:58px 1fr 28px;padding:15px 18px;gap:12px}.approved-sos-icon{width:48px;height:48px;font-size:30px}.approved-sos-copy{display:flex;flex-direction:column;gap:2px;align-items:flex-start}.approved-sos-copy b{font-size:36px}.approved-sos-copy small{font-size:14px}.approved-scroll{padding:20px 12px 14px}.approved-title-row h2{font-size:22px}.approved-popular{grid-template-columns:none;display:flex}.approved-popular button{min-width:132px;height:160px}.approved-offers{display:flex}.approved-offers button{min-width:245px}.approved-car-card{grid-template-columns:105px 1fr 20px;padding:13px;gap:12px}.approved-car-art{height:88px;font-size:54px}.approved-car-card>strong{grid-column:2/3;justify-self:start;padding:7px 11px;font-size:13px}.approved-car-card em{grid-column:3;grid-row:1/3}.approved-car-card b{font-size:19px}.approved-reminder-list a{grid-template-columns:48px 1fr auto 15px;padding:10px 12px}.approved-reminder-list strong{font-size:13px}.approved-home.is-scrolled .approved-sos-copy small{display:none}}
+    `}</style>
+  </main>
 }
