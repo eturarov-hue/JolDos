@@ -1,11 +1,3 @@
-ChatGPT
-
-
-
-
-ChatGPT Image 13 июл. 2026 г., 09_42_24.png
-сделай дизаин один в один
-
 image(426).png
 app/client/page.module.css нет у меня
 
