@@ -676,7 +676,7 @@ export default function Home(){
 
           <div className="wordmark refined-wordmark">
             <Image
-              src="/joldos-logo.png"
+             src={theme === "dark" ? "/joldos-logo-dark.png" : "/joldos-logo.png"}
               alt="JolDos"
               width={240}
               height={100}
