@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { BottomNav } from '@/components/BottomNav'
@@ -46,6 +46,8 @@ const ACTIVE_ORDER_STATUSES = new Set([
 function isActiveOrderStatus(status: unknown) {
   return ACTIVE_ORDER_STATUSES.has(String(status))
 }
+
+const StableMapView = memo(MapView)
 
 export default function Home(){
   const {lang,setLang}=useLanguage()
@@ -300,55 +302,62 @@ export default function Home(){
 
   useEffect(()=>{
     if(!activeOrderId) return
-    const timer=window.setInterval(async()=>{
+
+    let cancelled=false
+    const pollOrder=async()=>{
       try{
         const response=await fetch(`/api/orders?id=${encodeURIComponent(activeOrderId)}`,{cache:'no-store'})
         const data=await response.json()
+        if(cancelled)return
+
         if(!data.order||data.order.id!==activeOrderId){
           setActiveOrderId('')
           setStage('start')
           return
         }
-        const updatedStatus=String(data.order.status)
-        setOrders(prev=>{
-          const updatedOrder:ClientOrder={
-            id:data.order.id,
-            master:data.order.master||tx('searchingMaster'),
-            problem:data.order.problem,
-            location:data.order.location,
-            createdAt:new Date(data.order.createdAt).toLocaleString(locale),
-            status:data.order.status,
-            serviceType:data.order.serviceType,
-            providerType:data.order.providerType,
-          }
 
-          const exists=prev.some(o=>o.id===activeOrderId)
-
-          if(!exists){
-            return [updatedOrder,...prev]
-          }
-
-          return prev.map(o=>
-            o.id===activeOrderId
-              ? {...o,...updatedOrder}
-              : o
-          )
-        })
-
-        if(updatedStatus!=='Отменён'){
-          setStage('active')
-          setTab('home')
+        const updatedOrder:ClientOrder={
+          id:data.order.id,
+          master:data.order.master||tx('searchingMaster'),
+          problem:data.order.problem,
+          location:data.order.location,
+          createdAt:new Date(data.order.createdAt).toLocaleString(locale),
+          status:data.order.status,
+          serviceType:data.order.serviceType,
+          providerType:data.order.providerType,
         }
 
-        if(updatedStatus==='Отменён'){
+        setOrders(prev=>{
+          const current=prev.find(order=>order.id===activeOrderId)
+          if(
+            current &&
+            current.status===updatedOrder.status &&
+            current.master===updatedOrder.master &&
+            current.problem===updatedOrder.problem &&
+            current.location===updatedOrder.location &&
+            current.serviceType===updatedOrder.serviceType &&
+            current.providerType===updatedOrder.providerType
+          ) return prev
+
+          if(!current) return [updatedOrder,...prev]
+          return prev.map(order=>order.id===activeOrderId?updatedOrder:order)
+        })
+
+        if(String(updatedOrder.status)==='Отменён'){
           setActiveOrderId('')
           setStage('start')
           setTab('home')
         }
       }catch{}
-    },1000)
-    return ()=>window.clearInterval(timer)
-  },[activeOrderId])
+    }
+
+    void pollOrder()
+    const timer=window.setInterval(pollOrder,2500)
+    return ()=>{
+      cancelled=true
+      window.clearInterval(timer)
+    }
+  },[activeOrderId,locale,lang])
 
   function notify(text:string){ setToast(text); window.setTimeout(()=>setToast(''),2300) }
   function vibrate(){ if('vibrate' in navigator) navigator.vibrate(25) }
@@ -439,7 +448,7 @@ export default function Home(){
     findHelp(service.id)
   }
 
-  function useLocation(){
+  const useLocation=useCallback(()=>{
     if(!navigator.geolocation){ notify(tx('geoUnsupported')); return }
     if(!window.isSecureContext && window.location.hostname!=='localhost'){ notify(tx('geoHttps')); return }
     setGeoLoading(true)
@@ -448,7 +457,7 @@ export default function Home(){
       ()=>{setGeoLoading(false);notify(tx('geoAllow'))},
       {enableHighAccuracy:true,timeout:10000}
     )
-  }
+  },[lang])
   async function createOrder(){
     try{
       const response=await fetch('/api/orders',{
@@ -985,7 +994,7 @@ export default function Home(){
     const candidateCount=candidates.length
 
     return <section className="result-screen">
-      <MapView
+      <StableMapView
         lang={lang}
         coords={coords}
         masters={masters}
@@ -1081,7 +1090,7 @@ export default function Home(){
             : tx('waitingAcceptance')
 
     return <section className="active-screen">
-      <MapView
+      <StableMapView
         lang={lang}
         coords={coords}
         masters={hasAssignedMaster?masters:[]}
@@ -1215,7 +1224,7 @@ export default function Home(){
   function renderHome(){ if(stage==='searching') return <Searching/>; if(stage==='result') return <Result/>; if(stage==='active') return <ActiveOrder/>; return <StartScreen/> }
   function renderTab(){
     if(tab==='home') return renderHome()
-    if(tab==='map') return <section className="page-view"><header><h1>{tx('mapHelp')}</h1><p>{tx('chooseNearest')}</p></header><MapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading} page/><div className="mini-list">{masters.map((m,i)=><button type="button" key={m.name} onClick={()=>{setActiveMaster(i);setStage('result');setTab('home')}}><span>{m.initials}</span><div><b>{m.name}</b><small>{m.role} · {m.distance}</small></div><strong>{m.eta}</strong></button>)}</div></section>
+    if(tab==='map') return <section className="page-view"><header><h1>{tx('mapHelp')}</h1><p>{tx('chooseNearest')}</p></header><StableMapView lang={lang} coords={coords} masters={masters} activeMaster={activeMaster} onSelectMaster={handleMapSelect} onUseLocation={useLocation} geoLoading={geoLoading} page/><div className="mini-list">{masters.map((m,i)=><button type="button" key={m.name} onClick={()=>{setActiveMaster(i);setStage('result');setTab('home')}}><span>{m.initials}</span><div><b>{m.name}</b><small>{m.role} · {m.distance}</small></div><strong>{m.eta}</strong></button>)}</div></section>
     if(tab==='sto') return <section className="page-view scroll-page"><header><h1>{tx('catalog')}</h1><p>{tx('trustedAstana')}</p></header><div className="station-list">{stations.map(s=><article key={s.name}><div className="station-logo">J</div><div><h3>{s.name}</h3><p>{s.type}</p><small>★ {s.rating} · {s.distance} · {s.open}</small></div><button type="button" onClick={()=>notify(`${s.name}: ${tx('cardOpened')}`)}>›</button></article>)}</div></section>
     if(tab==='orders') return <section className="page-view scroll-page"><header><h1>{tx('myOrders')}</h1><p>{tx('historyCurrent')}</p></header>{orders.length===0?<div className="empty"><span>▤</span><h2>{tx('noOrders')}</h2><p>{tx('noOrdersDesc')}</p><button type="button" onClick={goHome}>{tx('find')}</button></div>:<div className="order-list">{orders.map(o=><article key={o.id}><div><small>{o.createdAt}</small><h3>{o.problem}</h3><p>{o.master} · {o.location}</p></div><b className={isActiveOrderStatus(o.status)?'live':''}>{statusLabel(o.status)}</b>{isActiveOrderStatus(o.status)&&<button type="button" onClick={()=>{setActiveOrderId(o.id);setStage('active');setTab('home')}}>{tx('openOrder')}</button>}</article>)}</div>}</section>
     return <section className="page-view scroll-page"><header><h1>{tx('profile')}</h1><p>{tx('settingsTitle')}</p></header><div className="profile-card"><div className="profile-icon">👤</div><h2>{tx('userName')}</h2><p>Astana · Kazakhstan</p><a href="tel:+77000000000">{tx('supportCall')}</a></div><div className="settings"><Link href="/client/car" style={{textDecoration:'none',display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',boxSizing:'border-box'}}>{tx('cars')} <span>›</span></Link><button type="button" onClick={()=>notify(tx('payment'))}>{tx('payment')} <span>›</span></button><button type="button" onClick={toggleNotifications}>{tx('notifications')} <span>›</span></button><button type="button" onClick={openMasterApp}>{lang==='kk'?'Шебер қосымшасы':lang==='en'?'Master app':'Приложение мастера'} <span>›</span></button><button type="button" onClick={switchRole}>{tx('roleBack')} <span>›</span></button></div></section>
@@ -1371,19 +1380,23 @@ export default function Home(){
 
       .refined-wordmark{
         min-width:0;
+        height:54px;
+        overflow:hidden;
         display:flex!important;
         flex-direction:column;
         align-items:center;
-        justify-content:center;
+        justify-content:flex-start;
         line-height:1;
       }
 
       .refined-logo-image{
         display:block!important;
         width:170px!important;
-        height:66px!important;
+        height:72px!important;
         max-width:100%!important;
         object-fit:contain!important;
+        object-position:center top!important;
+        transform:translateY(-3px) scale(1.03);
       }
       .refined-wordmark b,.refined-wordmark strong{display:inline;font-size:32px!important;letter-spacing:-1.9px}
       .refined-wordmark small{margin-top:6px;font-size:7px!important;letter-spacing:3px!important;white-space:nowrap;color:#111827!important;opacity:.78}
