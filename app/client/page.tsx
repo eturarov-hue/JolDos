@@ -539,29 +539,45 @@ export default function Home(){
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
   }
 
-  function ServiceIcon({ id }: { id: string }) {
+ function ServiceIcon({ id }: { id: string }) {
   const iconByService: Record<string, string> = {
     jump_start: "/joldos-home/battery.webp",
     wheel_change: "/joldos-home/wheel.webp",
     tow: "/joldos-home/tow.webp",
     fuel_delivery: "/joldos-home/fuel.webp",
     car_unlock: "/joldos-home/unlock.webp",
-    road_assistance: "/joldos-home/car.webp",
-    car_wash: "/joldos-home/car.webp",
-    starter: "/joldos-home/car.webp",
-    generator: "/joldos-home/car.webp",
-    electrical_diagnostics: "/joldos-home/car.webp",
+  }
+
+  const emojiByService: Record<string, string> = {
+    road_assistance: "🛠️",
+    car_wash: "🚿",
+    starter: "⚙️",
+    generator: "⚡",
+    electrical_diagnostics: "🔌",
+  }
+
+  const image = iconByService[id]
+
+  if (image) {
+    return (
+      <Image
+        src={image}
+        alt=""
+        width={84}
+        height={84}
+        className="service-image"
+        aria-hidden="true"
+      />
+    )
   }
 
   return (
-    <Image
-      src={iconByService[id] ?? "/joldos-home/car.webp"}
-      alt=""
-      width={84}
-      height={84}
-      className="service-image"
+    <span
+      className="service-image service-emoji"
       aria-hidden="true"
-    />
+    >
+      {emojiByService[id] ?? "🛠️"}
+    </span>
   )
 }
 
