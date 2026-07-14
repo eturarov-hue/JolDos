@@ -541,43 +541,31 @@ export default function Home(){
 
  function ServiceIcon({ id }: { id: string }) {
   const iconByService: Record<string, string> = {
-    jump_start: "/joldos-home/battery.webp",
-    wheel_change: "/joldos-home/wheel.webp",
-    tow: "/joldos-home/tow.webp",
-    fuel_delivery: "/joldos-home/fuel.webp",
-    car_unlock: "/joldos-home/unlock.webp",
-  }
-
-  const emojiByService: Record<string, string> = {
-    road_assistance: "🛠️",
-    car_wash: "🚿",
-    starter: "⚙️",
-    generator: "⚡",
-    electrical_diagnostics: "🔌",
+    jump_start: "/icons/services/jump-start.png",
+    wheel_change: "/icons/services/wheel-change.png",
+    tow: "/icons/services/tow.png",
+    fuel_delivery: "/icons/services/fuel-delivery.png",
+    car_unlock: "/icons/services/car-unlock.png",
+    road_assistance: "/icons/services/road-assistance.png",
+    starter: "/icons/services/starter.png",
+    generator: "/icons/services/generator.png",
+    electrical_diagnostics: "/icons/services/electrical-diagnostics.png",
+    car_wash: "/icons/services/car-wash.png",
   }
 
   const image = iconByService[id]
 
-  if (image) {
-    return (
-      <Image
-        src={image}
-        alt=""
-        width={84}
-        height={84}
-        className="service-image"
-        aria-hidden="true"
-      />
-    )
-  }
-
-  return (
-    <span
-      className="service-image service-emoji"
+  return image ? (
+    <Image
+      src={image}
+      alt=""
+      width={96}
+      height={96}
+      className="service-image"
       aria-hidden="true"
-    >
-      {emojiByService[id] ?? "🛠️"}
-    </span>
+    />
+  ) : (
+    <span className="service-image service-emoji" aria-hidden="true">🛠️</span>
   )
 }
 
